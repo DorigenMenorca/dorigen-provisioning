@@ -252,7 +252,7 @@ html,body{background:#FFF9F3;font-family:'Cormorant Garamond',Georgia,serif;colo
         </div>
         <div class="pc-pack-right">
           <span class="pc-pack-price">15€</span>
-          <a href="https://wa.me/34680495278?text=Hola,%20vull%20el%20Pack%20Esmorzar%2015€" class="pc-pack-btn" id="pc-b1">I want this</a>
+          <a href="#" onclick="addPackToCart('packs','Pack Esmorzar — 2 croissants xocolata · Mermelada · Mantequilla · Focaccia');return false;" class="pc-pack-btn" id="pc-b1">I want this</a>
         </div>
       </div>
       <div class="pc-pack">
@@ -263,7 +263,7 @@ html,body{background:#FFF9F3;font-family:'Cormorant Garamond',Georgia,serif;colo
         </div>
         <div class="pc-pack-right">
           <span class="pc-pack-price">35€</span>
-          <a href="https://wa.me/34680495278?text=Hola,%20vull%20el%20Pack%20Vermut%2035€" class="pc-pack-btn" id="pc-b2">I want this</a>
+          <a href="#" onclick="addPackToCart('packs','Pack Vermut — Chips Argente · Gildas XXL · Anxoves · Vi 600M o Vermut · Focaccia');return false;" class="pc-pack-btn" id="pc-b2">I want this</a>
         </div>
       </div>
       <div class="pc-pack">
@@ -274,7 +274,7 @@ html,body{background:#FFF9F3;font-family:'Cormorant Garamond',Georgia,serif;colo
         </div>
         <div class="pc-pack-right">
           <span class="pc-pack-price">60€</span>
-          <a href="https://wa.me/34680495278?text=Hola,%20vull%20el%20Pack%20Excursió%2060€" class="pc-pack-btn" id="pc-b3">I want this</a>
+          <a href="#" onclick="addPackToCart('packs','Pack Excursió — Taula formatges · Focaccia Ibèrica · Focaccia Menorquina · Minuty Rosé');return false;" class="pc-pack-btn" id="pc-b3">I want this</a>
         </div>
       </div>
       <div class="pc-pack">
@@ -285,7 +285,7 @@ html,body{background:#FFF9F3;font-family:'Cormorant Garamond',Georgia,serif;colo
         </div>
         <div class="pc-pack-right">
           <span class="pc-pack-price">28€</span>
-          <a href="https://wa.me/34680495278?text=Hola,%20vull%20el%20Pack%20Dolç%2028€" class="pc-pack-btn" id="pc-b4">I want this</a>
+          <a href="#" onclick="addPackToCart('packs','Pack Dolç Menorca — Pancracio · Melmelada · Carquinyols · Camamilla · Gelat');return false;" class="pc-pack-btn" id="pc-b4">I want this</a>
         </div>
       </div>
       <div class="pc-pack pc-pack-sunset">
@@ -296,7 +296,7 @@ html,body{background:#FFF9F3;font-family:'Cormorant Garamond',Georgia,serif;colo
         </div>
         <div class="pc-pack-right">
           <span class="pc-pack-price">50€</span>
-          <a href="https://wa.me/34680495278?text=Hola,%20vull%20el%20Pack%20Sunset%2050€" class="pc-pack-btn" id="pc-b5">I want this</a>
+          <a href="#" onclick="addPackToCart('packs','Pack Sunset D'Origen — Glop Rosé · Glop Negra · Torta del Casar · Gildas · Berberechos');return false;" class="pc-pack-btn" id="pc-b5">I want this</a>
         </div>
       </div>
       <div class="pc-pack pc-pack-premium">
@@ -468,7 +468,8 @@ const T = {
   en: {
     heroDesc: "On-board provisioning service with the finest products, curated by sommelier Sara Sanchís and chef Sergio Loris.",
     tagline: "Uncork Your Senses",
-    navAll: "All", navBoat: "⚓ Boat Experience", navBreakfast: "Breakfast & Basics", navSnacks: "Snacks & Preserves", navCheese: "Cheese & Charcuterie", navWines: "Wines", navDrinks: "Drinks",
+    navAll: "All", navPacks: "🎁 Packs",
+    navBoat: "⚓ Boat Experience", navBreakfast: "Breakfast & Basics", navSnacks: "Snacks & Preserves", navCheese: "Cheese & Charcuterie", navWines: "Wines", navDrinks: "Drinks",
     navEncargo: "✉ On Request",
     search: "Search product…",
     addBtn: "+ Add to order",
@@ -548,6 +549,7 @@ const T = {
       "VINOS DE MENORCA — TINTOS":"MENORCA RED WINES",
       "TINTOS NACIONALES":"SPANISH RED WINES",
       "CHAMPAGNE & CAVA":"CHAMPAGNE & CAVA",
+      "🎁 PACKS D'ORIGEN · A BORD":"🎁 D'ORIGEN PACKS · ONBOARD",
       "JOYAS EMBOTELLADAS":"FINE WINES",
       "GINEBRA DE MENORCA":"MENORCA GIN",
       "CERVEZA DE MENORCA — GRAHAM PEARCE":"MENORCA CRAFT BEER — GRAHAM PEARCE",
@@ -559,6 +561,7 @@ const T = {
     },
     notes: {
       "Focaccias artesanales elaboradas cada mañana con harinas ecológicas · Chef Sergio Loris":"Artisan focaccias baked every morning with organic flours · Chef Sergio Loris",
+      "Packs dissenyats per a cada moment del dia. Selecciona i afegeix al carret.":"Packs designed for every moment of your day. Select and add to cart.",
       "Presentadas en caja Kraft · Pensadas para 4-6 personas":"Presented in Kraft box · Designed for 4-6 persons",
       "Helados artesanos Santa Cecília elaborados con leche de Vaca Vermella Menorquina · Tarrina 135ml":"Artisan Santa Cecília ice cream made with Menorcan Vaca Vermella milk · 135ml tub",
       "Disponibilidad sujeta a confirmación · Disponibility subject to confirmation · Disponibilité sous réserve de confirmation":"Availability subject to confirmation",
@@ -592,6 +595,12 @@ const T = {
       "Pasta Rummo Tagliatelle":"Rummo Tagliatelle Pasta",
       "Pasta Rummo Sin Gluten":"Rummo Gluten-Free Pasta",
       "Arroz Bomba Buda — ideal paellas":"Buda Bomba Rice — ideal for paella",
+      "Pack Esmorzar — 2 croissants xocolata · Mermelada · Mantequilla · Focaccia":"Breakfast Pack — 2 chocolate croissants · Jam · Butter · Focaccia",
+      "Pack Vermut — Chips Argente · Gildas XXL · Anxoves · Vi 600M o Vermut · Focaccia":"Vermut Pack — Argente chips · Gildas XXL · Anchovies · 600M wine or Vermouth · Focaccia",
+      "Pack Excursió — Taula formatges · Focaccia Ibèrica · Focaccia Menorquina · Minuty Rosé":"Excursion Pack — Cheese board · Focaccia Ibérica · Focaccia Menorquina · Minuty Rosé",
+      "Pack Dolç Menorca — Pancracio · Melmelada · Carquinyols · Camamilla · Gelat":"Sweet Menorca Pack — Pancracio · Jam · Carquinyols · Chamomile · Ice cream",
+      "Pack Sunset D'Origen — Glop Rosé · Glop Negra · Torta del Casar · Gildas · Berberechos":"Sunset D'Origen Pack — Glop Rosé · Glop Negra · Torta del Casar · Gildas · Berberechos",
+      "Pack Gourmet Dijous — Ostres Sorlut×10 · Cava Bertha · Gildas salmó×6 · Taula formatges":"Thursday Gourmet Pack — Sorlut oysters×10 · Bertha Cava · Salmon Gildas×6 · Cheese board",
       "Gazpacho García Millán":"Gazpacho García Millán",
       "Lentejas Guisadas":"Stewed Lentils",
       "Alubias con Almejas":"White Beans with Clams",
@@ -714,7 +723,8 @@ const T = {
   es: {
     heroDesc: "Servicio de abastecimiento a bordo del mejor producto, seleccionado por la sommelier Sara Sanchís y el chef Sergio Loris.",
     tagline: "Descorcha Tus Sentidos",
-    navAll: "Todo", navBoat: "⚓ Especial Barco", navBreakfast: "Desayuno & Básicos", navSnacks: "Picoteo & Conservas", navCheese: "Quesos & Charcuterie", navWines: "Vinos", navDrinks: "Bebidas",
+    navAll: "Todo", navPacks: "🎁 Packs",
+    navBoat: "⚓ Especial Barco", navBreakfast: "Desayuno & Básicos", navSnacks: "Picoteo & Conservas", navCheese: "Quesos & Charcuterie", navWines: "Vinos", navDrinks: "Bebidas",
     navEncargo: "✉ Bajo Encargo",
     search: "Buscar producto…",
     addBtn: "+ Añadir",
@@ -858,6 +868,7 @@ const T_FR = {
       "VINOS DE MENORCA — TINTOS":"VINS ROUGES DE MINORQUE",
       "TINTOS NACIONALES":"VINS ROUGES D'ESPAGNE",
       "CHAMPAGNE & CAVA":"CHAMPAGNE & CAVA",
+      "🎁 PACKS D'ORIGEN · A BORD":"🎁 PACKS D'ORIGEN · À BORD",
       "JOYAS EMBOTELLADAS":"GRANDS VINS",
       "BEGUDES SENSE ALCOHOL":"ALCOHOL-FREE DRINKS",
       "BEGUDES SENSE ALCOHOL":"BOISSONS SANS ALCOOL",
@@ -870,6 +881,7 @@ const T_FR = {
     },
     notes: {
       "Focaccias artesanales elaboradas cada mañana con harinas ecológicas · Chef Sergio Loris":"Focaccias artisanales préparées chaque matin avec des farines biologiques · Chef Sergio Loris",
+      "Packs dissenyats per a cada moment del dia. Selecciona i afegeix al carret.":"Packs conçus pour chaque moment de votre journée. Sélectionnez et ajoutez au panier.",
       "Presentadas en caja Kraft · Pensadas para 4-6 personas":"Présentés en boîte Kraft · Idéal pour 4-6 personnes",
       "Helados artesanos Santa Cecília elaborados con leche de Vaca Vermella Menorquina · Tarrina 135ml":"Glaces artisanales Santa Cecília au lait de Vache Vermella de Minorque · Pot 135ml",
       "Disponibilidad sujeta a confirmación · Disponibility subject to confirmation · Disponibilité sous réserve de confirmation":"Disponibilité sous réserve de confirmation",
@@ -911,6 +923,12 @@ const T_FR = {
       "Pesto a la Genovesa":"Pesto à la Génoise",
       "Salsa de Tomate y Albahaca":"Sauce Tomate & Basilic",
       "Salsa Spinaler":"Sauce Spinaler",
+      "Pack Esmorzar — 2 croissants xocolata · Mermelada · Mantequilla · Focaccia":"Pack Petit-déjeuner — 2 croissants chocolat · Confiture · Beurre · Focaccia",
+      "Pack Vermut — Chips Argente · Gildas XXL · Anxoves · Vi 600M o Vermut · Focaccia":"Pack Vermut — Chips Argente · Gildas XXL · Anchois · Vin 600M ou Vermouth · Focaccia",
+      "Pack Excursió — Taula formatges · Focaccia Ibèrica · Focaccia Menorquina · Minuty Rosé":"Pack Excursion — Plateau fromages · Focaccia Ibérica · Focaccia Minorquina · Minuty Rosé",
+      "Pack Dolç Menorca — Pancracio · Melmelada · Carquinyols · Camamilla · Gelat":"Pack Douceurs Minorque — Pancracio · Confiture · Carquinyols · Camomille · Glace",
+      "Pack Sunset D'Origen — Glop Rosé · Glop Negra · Torta del Casar · Gildas · Berberechos":"Pack Sunset D'Origen — Glop Rosé · Glop Negra · Torta del Casar · Gildas · Coques",
+      "Pack Gourmet Dijous — Ostres Sorlut×10 · Cava Bertha · Gildas salmó×6 · Taula formatges":"Pack Gourmet Jeudi — Huîtres Sorlut×10 · Cava Bertha · Gildas saumon×6 · Plateau fromages",
       "Gazpacho García Millán":"Gazpacho García Millán",
       "Lentejas Guisadas":"Lentilles Mijotées",
       "Alubias con Almejas":"Haricots Blancs aux Palourdes",
@@ -1064,10 +1082,21 @@ const T_FR = {
     },
 };
 
-const NAV_KEYS = ["navAll","navBoat","navBreakfast","navSnacks","navCheese","navWines","navDrinks","navEncargo"];
-const NAV_IDS  = [null, ["00","00b"], ["01","03","04"], ["05","06","08"], ["09","10","11","12"], ["13","14","15b","15","16","17","18"], ["21b","21c","19","20","21"], ["22"]];
+const NAV_KEYS = ["navAll","navPacks","navBoat","navBreakfast","navSnacks","navCheese","navWines","navDrinks","navEncargo"];
+const NAV_IDS  = [null, ["packs"], ["00","00b"], ["01","03","04"], ["05","06","08"], ["09","10","11","12"], ["13","14","15b","15","16","17","18"], ["21b","21c","19","20","21"], ["22"]];
 
 const CATALOG = [
+  {id:"packs",section:"Packs D'Origen",category:"🎁 PACKS D'ORIGEN",
+    note:"Packs dissenyats per a cada moment del dia. Selecciona i afegeix al carret.",
+    items:[
+      {name:"Pack Esmorzar — 2 croissants xocolata · Mermelada · Mantequilla · Focaccia",price:15.00},
+      {name:"Pack Vermut — Chips Argente · Gildas XXL · Anxoves · Vi 600M o Vermut · Focaccia",price:35.00},
+      {name:"Pack Excursió — Taula formatges · Focaccia Ibèrica · Focaccia Menorquina · Minuty Rosé",price:60.00},
+      {name:"Pack Dolç Menorca — Pancracio · Melmelada · Carquinyols · Camamilla · Gelat",price:28.00},
+      {name:"Pack Sunset D'Origen — Glop Rosé · Glop Negra · Torta del Casar · Gildas · Berberechos",price:50.00},
+      {name:"Pack Gourmet Dijous — Ostres Sorlut×10 · Cava Bertha · Gildas salmó×6 · Taula formatges",price:95.00},
+    ],
+  },
   {
     id:"00", section:"Especial Barco", category:"⚓ ESPECIAL SALIDAS EN BARCO",
     note:"Focaccias artesanales elaboradas cada mañana con harinas ecológicas · Chef Sergio Loris",
@@ -1326,6 +1355,40 @@ const CATALOG = [
 let cart = {};
 let activeNav = 0;
 let lang = "en";
+
+function addPackToCart(secId, itemName) {
+  const key = secId + "||" + itemName;
+  cart[key] = (cart[key] || 0) + 1;
+  updateCart();
+  showPackToast();
+}
+
+function showPackToast() {
+  const t = lang === 'fr' ? T_FR : T[lang];
+  const msgs = {
+    es: {msg:"¡Añadido al carrito!", cont:"Seguir comprando", order:"Hacer pedido"},
+    en: {msg:"Added to cart!", cont:"Continue shopping", order:"Place order"},
+    fr: {msg:"Ajouté au panier!", cont:"Continuer les achats", order:"Commander"},
+  };
+  const m = msgs[lang] || msgs.en;
+  document.getElementById("toast-msg").textContent = m.msg;
+  document.getElementById("toast-continue").textContent = m.cont;
+  document.getElementById("toast-order").textContent = m.order;
+  const toast = document.getElementById("packToast");
+  toast.style.display = "block";
+  setTimeout(() => { toast.style.display = "none"; }, 6000);
+}
+
+function continueShopping() {
+  document.getElementById("packToast").style.display = "none";
+  enterCatalogue();
+}
+
+function goToCheckout() {
+  document.getElementById("packToast").style.display = "none";
+  enterCatalogue();
+  setTimeout(() => goCheckout(), 300);
+}
 
 function enterCatalogue() {
   document.getElementById("packsScreen").classList.add("hidden");
@@ -1826,5 +1889,17 @@ function sendWhatsApp() {
   }
 }
 </script>
+
+<div id="packToast" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:1000;background:#1C2820;border:1px solid #C9A96E;padding:20px 24px;min-width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.4);">
+  <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#F2D3B1;margin-bottom:14px;" id="toast-msg">Afegit al carret!</p>
+  <div style="display:flex;gap:10px;justify-content:center;">
+    <button onclick="continueShopping()" style="background:none;border:1px solid rgba(201,169,110,.4);color:#C9A96E;padding:9px 18px;font-family:'Raleway',sans-serif;font-size:9px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;">
+      <span id="toast-continue">Continuar comprant</span>
+    </button>
+    <button onclick="goToCheckout()" style="background:#C9A96E;border:none;color:#1C2820;padding:9px 18px;font-family:'Raleway',sans-serif;font-size:9px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;font-weight:700;">
+      <span id="toast-order">Fer pedido</span>
+    </button>
+  </div>
+</div>
 </body>
 </html>

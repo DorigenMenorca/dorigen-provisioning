@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Productors i Artesans de Menorca — D'Origen</title>
+<meta name="description" content="El mapa dels productors i artesans de Menorca amb qui treballa D'Origen: formatges, mel, oli, sal, cervesa, sidra, gin i molt més.">
+<meta property="og:title" content="Productors i Artesans de Menorca — D'Origen">
+<meta property="og:description" content="Descobreix d'on ve el que venem: el mapa dels productors locals de D'Origen Espai Gastronòmic.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://dorigen-menorca.com/productors">
+<link rel="canonical" href="https://dorigen-menorca.com/productors">
+<meta property="og:image" content="https://dorigen-menorca.com/img/mapa-productors.jpg">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --burgundy:#3C0F12;
+    --green:#333A32;
+    --cream:#F2D3B1;
+    --cream-light:#FAF3E8;
+    --gold:#B8956A;
+    --ink:#2A2220;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    font-family:'Raleway',sans-serif;
+    background:var(--cream-light);
+    color:var(--ink);
+    overflow-y:auto;
+    overflow-x:hidden;
+  }
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
+
+  /* ── Capçalera ── */
+  header{
+    background:var(--burgundy);
+    color:var(--cream);
+    padding:14px 22px;
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    flex-wrap:wrap;
+    border-bottom:3px solid var(--gold);
+  }
+  header h1{
+    font-family:'Playfair Display',serif;
+    font-weight:600;
+    font-size:1.35rem;
+    letter-spacing:.02em;
+  }
+  header .sub{
+    font-size:.72rem;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+  }
+
+  /* ── Estructura ── */
+  .layout{flex:1;display:flex;min-height:0;}
+  aside{
+    width:280px;
+    background:var(--cream-light);
+    border-right:1px solid rgba(184,149,106,.45);
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+  }
+  aside .intro{
+    padding:18px 20px 10px;
+    font-size:.8rem;
+    line-height:1.5;
+    color:var(--green);
+  }
+  aside .intro strong{font-weight:700;}
+  nav{padding:6px 12px 20px;}
+  .prod-btn{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    background:none;
+    border:none;
+    border-bottom:1px dashed rgba(184,149,106,.5);
+    padding:10px 10px;
+    font-family:'Raleway',sans-serif;
+    font-size:.86rem;
+    font-weight:600;
+    color:var(--green);
+    letter-spacing:.03em;
+    cursor:pointer;
+    text-align:left;
+    transition:background .15s,color .15s;
+  }
+  .prod-btn .lbl{display:flex;align-items:center;gap:10px;}
+  .prod-btn .ic{
+    width:22px;height:22px;flex-shrink:0;
+    color:var(--gold);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .prod-btn .ic svg{width:100%;height:100%;}
+  .prod-btn .count{
+    font-size:.7rem;
+    font-weight:700;
+    color:var(--gold);
+    border:1px solid var(--gold);
+    border-radius:50%;
+    width:22px;height:22px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .prod-btn:hover{background:rgba(184,149,106,.12);}
+  .prod-btn.active{
+    background:var(--burgundy);
+    color:var(--cream);
+    border-bottom-color:transparent;
+  }
+  .prod-btn.active .ic{color:var(--cream);}
+  .prod-btn.active .count{border-color:var(--cream);color:var(--cream);}
+
+  /* ── Mapa ── */
+  .map-wrap{flex:1;position:relative;min-width:0;}
+  #map{position:absolute;inset:0;background:var(--green);}
+  .leaflet-container{background:var(--green);}
+
+  /* ── Medallons de productor (s'encenen en seleccionar) ── */
+  .medallion{
+    width:42px;height:42px;
+    border-radius:50%;
+    background:var(--cream-light);
+    border:1.5px solid var(--burgundy);
+    box-shadow:0 0 0 3px var(--cream-light), 0 0 0 4.5px var(--gold), 0 3px 10px rgba(42,34,32,.5);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--burgundy);
+    cursor:pointer;
+    opacity:0;
+    animation:ignite .55s ease-out forwards, halo 1.4s ease-out;
+    transition:transform .18s;
+  }
+  .medallion svg{width:24px;height:24px;}
+  .medallion:hover{transform:scale(1.14) rotate(-5deg);}
+  .medallion.selected{
+    background:var(--burgundy);
+    color:var(--cream);
+    border-color:var(--gold);
+    transform:scale(1.18) rotate(-5deg);
+  }
+  @keyframes ignite{
+    0%{opacity:0;transform:scale(.35);}
+    60%{opacity:1;transform:scale(1.12);}
+    100%{opacity:1;transform:scale(1);}
+  }
+  @keyframes halo{
+    0%{box-shadow:0 0 0 3px var(--cream-light), 0 0 0 4.5px var(--gold), 0 0 0 0 rgba(184,149,106,.65);}
+    100%{box-shadow:0 0 0 3px var(--cream-light), 0 0 0 4.5px var(--gold), 0 0 0 26px rgba(184,149,106,0);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .medallion{animation:none;opacity:1;transition:none;}
+    .ficha{animation:none;}
+  }
+
+  /* ── Fitxa del productor ── */
+  .ficha{
+    position:absolute;
+    right:18px;bottom:18px;
+    width:330px;
+    max-width:calc(100% - 36px);
+    max-height:calc(100% - 36px);
+    overflow-y:auto;
+    background:var(--cream-light);
+    border:1.5px solid var(--gold);
+    box-shadow:0 8px 28px rgba(42,34,32,.4);
+    z-index:1000;
+    display:none;
+    animation:rise .22s ease-out;
+  }
+  .ficha.open{display:block;}
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  .ficha .band{
+    background:var(--burgundy);
+    color:var(--cream);
+    padding:14px 18px 12px;
+    position:relative;
+  }
+  .ficha .band .cat{
+    font-size:.65rem;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;margin-bottom:4px;
+  }
+  .ficha .band h2{
+    font-family:'Playfair Display',serif;
+    font-weight:600;font-size:1.25rem;line-height:1.2;
+  }
+  .ficha .band .lloc{font-size:.78rem;margin-top:4px;opacity:.85;}
+  .ficha .close{
+    position:absolute;top:10px;right:12px;
+    background:none;border:none;color:var(--cream);
+    font-size:1.2rem;cursor:pointer;line-height:1;padding:4px;
+  }
+  .ficha .body{padding:16px 18px 18px;font-size:.85rem;line-height:1.55;}
+  .ficha .body p{margin-bottom:10px;}
+  .ficha .vincle{
+    border-top:1px dashed var(--gold);
+    padding-top:10px;margin-top:4px;
+  }
+  .ficha .vincle .label{
+    font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;margin-bottom:4px;
+  }
+  .ficha .products{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;}
+  .ficha .products span{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:.68rem;font-weight:600;letter-spacing:.05em;
+    border:1px solid var(--green);color:var(--green);
+    padding:3px 9px;border-radius:12px;
+  }
+  .ficha .products svg{width:13px;height:13px;}
+
+  /* ── Etiquetes de municipi ── */
+  .muni-label{
+    font-family:'Raleway',sans-serif;
+    font-size:.56rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(60,15,18,.5);
+    font-weight:700;
+    white-space:nowrap;
+    pointer-events:none;
+    text-align:center;
+  }
+  .hide-muni .muni-label{display:none;}
+
+  /* ── Invitació inicial sobre el mapa ── */
+  .map-hint{
+    position:absolute;
+    left:50%;top:20px;transform:translateX(-50%);
+    background:rgba(60,15,18,.85);
+    color:var(--cream);
+    border:1px solid var(--gold);
+    padding:9px 18px;
+    font-size:.75rem;
+    letter-spacing:.08em;
+    z-index:900;
+    pointer-events:none;
+    transition:opacity .4s;
+    text-align:center;
+    max-width:85%;
+  }
+  .map-hint.hidden{opacity:0;}
+
+  /* ── Directori rastrejable (SEO) ── */
+  #directori{
+    background:var(--cream-light);
+    border-top:3px solid var(--gold);
+    padding:36px 26px 50px;
+    max-width:1100px;
+    margin:0 auto;
+  }
+  #directori h2{
+    font-family:'Playfair Display',serif;
+    font-weight:600;color:var(--burgundy);
+    font-size:1.5rem;margin-bottom:6px;
+  }
+  #directori .dir-lead{font-size:.85rem;color:var(--green);max-width:640px;margin-bottom:26px;line-height:1.55;}
+  #directori h3{
+    font-family:'Playfair Display',serif;
+    font-weight:600;color:var(--burgundy);
+    font-size:1.05rem;
+    border-bottom:1px dashed var(--gold);
+    padding-bottom:5px;margin:26px 0 14px;
+  }
+  .dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;}
+  .dir-card{
+    border:1px solid rgba(184,149,106,.5);
+    background:#fff8ef;
+    padding:14px 16px;
+    font-size:.8rem;line-height:1.5;
+  }
+  .dir-card h4{
+    font-family:'Playfair Display',serif;
+    font-weight:600;font-size:.98rem;color:var(--burgundy);
+  }
+  .dir-card .dir-poble{
+    font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;margin:2px 0 8px;
+  }
+  .dir-card .dir-nota{margin-top:8px;color:var(--green);}
+  #directori footer{
+    margin-top:36px;font-size:.72rem;color:var(--green);
+    border-top:1px solid rgba(184,149,106,.4);padding-top:14px;
+  }
+  .dir-link{
+    display:block;padding:0 20px 16px;
+    font-size:.72rem;letter-spacing:.06em;
+    color:var(--burgundy);font-weight:700;text-decoration:none;
+  }
+  .dir-link:hover{color:var(--gold);}
+
+  /* ── Mòbil ── */
+  @media (max-width:720px){
+    .layout{flex-direction:column;}
+    aside{
+      width:100%;
+      border-right:none;
+      border-bottom:1px solid rgba(184,149,106,.45);
+      max-height:38vh;
+    }
+    aside .intro{padding:12px 16px 6px;font-size:.75rem;}
+    nav{
+      display:flex;flex-wrap:nowrap;overflow-x:auto;
+      padding:6px 12px 12px;gap:8px;
+    }
+    .prod-btn{
+      flex:0 0 auto;width:auto;
+      border:1px solid var(--gold);border-radius:20px;
+      padding:8px 12px;font-size:.78rem;
+    }
+    .prod-btn .count{display:none;}
+    .prod-btn .ic{width:18px;height:18px;}
+    .ficha{left:12px;right:12px;bottom:12px;width:auto;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+<header>
+  <h1>Productors i Artesans de Menorca</h1>
+  <span class="sub">D'Origen · Espai Gastronòmic — Maó</span>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="intro">
+      Tria un <strong>producte</strong> i s'encendran al mapa els productors amb qui treballem. Clica cada medalló per conèixer la seva història.
+    </div>
+    <nav id="productNav"></nav>
+    <a class="dir-link" href="#directori">▾ Directori complet de productors</a>
+  </aside>
+
+  <div class="map-wrap">
+    <div id="map"></div>
+    <div class="map-hint" id="mapHint">Tria un producte de la llista per il·luminar l'illa</div>
+    <div class="ficha" id="ficha">
+      <div class="band">
+        <button class="close" id="fichaClose" aria-label="Tancar fitxa">×</button>
+        <div class="cat" id="fCat"></div>
+        <h2 id="fNom"></h2>
+        <div class="lloc" id="fLloc"></div>
+      </div>
+      <div class="body">
+        <p id="fDesc"></p>
+        <div class="vincle">
+          <div class="label">Per què ens agrada</div>
+          <p id="fVincle"></p>
+        </div>
+        <div class="products" id="fProds"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- /app -->
+
+<section id="directori">
+  <h2>Els nostres productors, un a un</h2>
+  <p class="dir-lead">A D'Origen Espai Gastronòmic (Maó) treballem amb productors i artesans de tota Menorca. Aquest és el directori complet: formatges i embotits, fruita i verdura, mel, melmelades, oli, sal, cervesa, sidra, gin, licor d'herbes, gelats, croquetes i caldos artesans — tots elaborats a l'illa.</p>
+      <h3>Formatges i embotits</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Santa Cecília</h4>
+          <p class="dir-poble">Ferreries</p>
+          <p>Formatge ecològic elaborat amb llet de vaca vermella menorquina, la raça autòctona de l'illa. De la mateixa llet neixen també els seus gelats artesans, cremosos i de sabor net.</p>
+          <p class="dir-nota"><em>La llet de vaca vermella dona un formatge d'una cremositat i una profunditat que no es troben enlloc més — i els seus gelats en són la prova dolça.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>D'en Vinent</h4>
+          <p class="dir-poble">Maó</p>
+          <p>Formatge Mahón-Menorca de lloc, elaborat a la finca amb llet pròpia i el saber fer de generacions de formatgers maonesos.</p>
+          <p class="dir-nota"><em>El punt just de maduració: mantegós a l'entrada, amb aquella coïssor final que fa gran el formatge de Maó.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Meloussa — Cooperativa del Camp</h4>
+          <p class="dir-poble">Es Mercadal</p>
+          <p>La cooperativa del camp menorquí, que reuneix els ramaders de l'illa. Formatges Mahón-Menorca i, del mateix obrador, els embotits de sempre: sobrassada, carn-i-xua i fuet.</p>
+          <p class="dir-nota"><em>Sobrassada, carn-i-xua i fuet com es feien abans: pebre vermell honest, greix noble i gens de pressa.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Es Tonedor</h4>
+          <p class="dir-poble">Maó (camí rural)</p>
+          <p>Formatge de cabra artesà, de petit ramat i elaboració acurada. Frescor làctica i el caràcter singular de la cabra menorquina.</p>
+          <p class="dir-nota"><em>Un cabra net i fresc, gens agressiu, que convenç fins i tot els qui diuen que el formatge de cabra no els agrada.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Binibèca</h4>
+          <p class="dir-poble">Sant Lluís</p>
+          <p>Formatge madurat al vi amb herbes: l'escorça banyada en vi i el perfum de les herbes aromàtiques li donen un perfil únic i molt menorquí.</p>
+          <p class="dir-nota"><em>L'escorça banyada al vi amb herbes perfuma la pasta sense tapar-la: un formatge que explica Menorca a cada tall.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Hort de Sant Patrici</h4>
+          <p class="dir-poble">Ferreries</p>
+          <p>Finca formatgera emblemàtica de Ferreries, amb museu del formatge propi. Elaboren el formatge d'herbes, el curat al fum i un fresc delicat.</p>
+          <p class="dir-nota"><em>El fumat és subtil, de llenya i no d'artifici, i el d'herbes fa olor de camp menorquí a la primavera.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Santa Margarida</h4>
+          <p class="dir-poble">Menorca</p>
+          <p>Finca artesana que elabora la torta al safrà i el curat amb safrà — formatges únics on l'or vermell perfuma la pasta — a més d'una mel de flora menorquina.</p>
+          <p class="dir-nota"><em>El safrà dona a la torta un perfum i un color d'or que no s'obliden — i la seva mel tanca el cercle a la taula.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Cala Blanc i Cala Blau</h4>
+          <p class="dir-poble">Ciutadella</p>
+          <p>Dos formatges germans que porten nom de mar: el Cala Blanc, suau i cremós, i el Cala Blau, de pasta blava amb caràcter.</p>
+          <p class="dir-nota"><em>Dos caràcters oposats que es complementen: la cremositat amable del Blanc i la punta salvatge del Blau.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Tirant</h4>
+          <p class="dir-poble">Es Mercadal (zona de Tirant)</p>
+          <p>Formatge tendre amb herbes elaborat a la plana de Tirant, al nord de l'illa: pasta suau i el perfum fresc de les herbes menorquines.</p>
+          <p class="dir-nota"><em>Tendre, làctic i amb les herbes al punt just: la porta d'entrada perfecta als formatges de l'illa.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Torre d'en Quart</h4>
+          <p class="dir-poble">Ciutadella</p>
+          <p>Formatge fresc de finca, fet amb llet del dia: làctic, delicat i de vida curta, com mana la tradició.</p>
+          <p class="dir-nota"><em>Un fresc que sap a llet del dia: humil, delicat i imprescindible quan arriba la calor.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Can Lao</h4>
+          <p class="dir-poble">Menorca</p>
+          <p>Obrador artesà d'embotits menorquins: sobrassada i carn-i-xua elaborades segons les receptes de sempre.</p>
+          <p class="dir-nota"><em>Sobrassada de tall generós i carn-i-xua amb aquell equilibri de magre i greix que només dona l'ofici.</em></p>
+        </article>
+      </div>
+      <h3>Fruita i verdura</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Hort d'en Borràs</h4>
+          <p class="dir-poble">Sant Lluís</p>
+          <p>Fruita i verdura de temporada de l'horta de Sant Lluís, collida al punt just, amb el gust de la terra vermella de l'illa.</p>
+          <p class="dir-nota"><em>Collit al matí, a la botiga al migdia: el gust que la terra vermella dona a un tomàquet no s'explica, es tasta.</em></p>
+        </article>
+      </div>
+      <h3>Mel</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Santa Margarida</h4>
+          <p class="dir-poble">Menorca</p>
+          <p>Finca artesana que elabora la torta al safrà i el curat amb safrà — formatges únics on l'or vermell perfuma la pasta — a més d'una mel de flora menorquina.</p>
+          <p class="dir-nota"><em>El safrà dona a la torta un perfum i un color d'or que no s'obliden — i la seva mel tanca el cercle a la taula.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Mel i Untis</h4>
+          <p class="dir-poble">Menorca</p>
+          <p>Obrador artesà de mel de flora menorquina i melmelades de collita pròpia: pots petits, fruita de veritat i gens de pressa.</p>
+          <p class="dir-nota"><em>Mel de flora menorquina i melmelades amb més fruita que sucre: pots petits, sabor gran.</em></p>
+        </article>
+      </div>
+      <h3>Melmelades</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Mel i Untis</h4>
+          <p class="dir-poble">Menorca</p>
+          <p>Obrador artesà de mel de flora menorquina i melmelades de collita pròpia: pots petits, fruita de veritat i gens de pressa.</p>
+          <p class="dir-nota"><em>Mel de flora menorquina i melmelades amb més fruita que sucre: pots petits, sabor gran.</em></p>
+        </article>
+      </div>
+      <h3>Oli</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Oli del Perico</h4>
+          <p class="dir-poble">Menorca</p>
+          <p>Oli d'oliva verge extra de finca menorquina, de collita primerenca i extracció en fred.</p>
+          <p class="dir-nota"><em>Collita primerenca: verd, herbaci i amb aquella picantor final que demana un tros de pa moreno.</em></p>
+        </article>
+        <article class="dir-card">
+          <h4>Oli del Fornet</h4>
+          <p class="dir-poble">Menorca</p>
+          <p>Oli verge extra d'oliveres joves sobre sòl calcari menorquí, amb perfil fresc i herbaci.</p>
+          <p class="dir-nota"><em>Un verge extra fresc i net, d'oliveres sobre sòl calcari, perfecte per acabar un plat en cru.</em></p>
+        </article>
+      </div>
+      <h3>Sal</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Salines de la Concepció</h4>
+          <p class="dir-poble">Fornells (Es Mercadal)</p>
+          <p>Flor de sal collida a mà a les salines històriques de la Concepció, al nord de l'illa: sol, mar i vent de tramuntana.</p>
+          <p class="dir-nota"><em>Flor de sal que cruix i es fon: la tramuntana i el sol de Fornells recollits en un cristall.</em></p>
+        </article>
+      </div>
+      <h3>Cervesa</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Grahame Pearce</h4>
+          <p class="dir-poble">Sant Climent (Maó)</p>
+          <p>El pioner de la cervesa artesana a Menorca: elaboracions de petit lot fetes a Sant Climent amb receptes pròpies.</p>
+          <p class="dir-nota"><em>Cerveses de petit lot amb personalitat pròpia: qui va demostrar que a Menorca també es fa gran cervesa.</em></p>
+        </article>
+      </div>
+      <h3>Sidra</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Sidra d'en Kane</h4>
+          <p class="dir-poble">Es Mercadal</p>
+          <p>Sidra artesana que ret homenatge al governador Kane, qui va portar les pomeres a l'illa. Poma menorquina i fermentació natural.</p>
+          <p class="dir-nota"><em>Poma de l'illa i fermentació natural: seca, viva i amb la història del governador que va plantar les pomeres.</em></p>
+        </article>
+      </div>
+      <h3>Gin</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Glop — Gin Innat</h4>
+          <p class="dir-poble">Maó</p>
+          <p>Gin Innat, de l'obrador Glop: un gin elaborat per maceració, deixant que els botànics de l'illa infusionin lentament el seu caràcter, sense passar per l'alambí.</p>
+          <p class="dir-nota"><em>La maceració lenta li dona una expressió botànica més directa i silvestre: un gin que sap a Menorca sense filtres.</em></p>
+        </article>
+      </div>
+      <h3>Licor d'herbes</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Herbes de Biniarbolla</h4>
+          <p class="dir-poble">Es Mercadal (el Toro)</p>
+          <p>Licor d'herbes elaborat amb la recepta dels monjos del Monte Toro: plantes de l'illa macerades amb paciència, com fa segles.</p>
+          <p class="dir-nota"><em>La recepta dels monjos del Toro: herbes de veritat, dolçor mesurada i el gust de sempre per acabar un sopar.</em></p>
+        </article>
+      </div>
+      <h3>Caldos artesans</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Mi Caldo</h4>
+          <p class="dir-poble">Menorca</p>
+          <p>Caldos artesans de cocció lenta, fets amb producte de proximitat i sense dreceres: fons de veritat per a la cuina de cada dia.</p>
+          <p class="dir-nota"><em>Cocció lenta i producte de proximitat: fons nets i profunds que salven qualsevol plat d'hivern.</em></p>
+        </article>
+      </div>
+      <h3>Gelats</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Santa Cecília</h4>
+          <p class="dir-poble">Ferreries</p>
+          <p>Formatge ecològic elaborat amb llet de vaca vermella menorquina, la raça autòctona de l'illa. De la mateixa llet neixen també els seus gelats artesans, cremosos i de sabor net.</p>
+          <p class="dir-nota"><em>La llet de vaca vermella dona un formatge d'una cremositat i una profunditat que no es troben enlloc més — i els seus gelats en són la prova dolça.</em></p>
+        </article>
+      </div>
+      <h3>Croquetes</h3>
+      <div class="dir-grid">
+        <article class="dir-card">
+          <h4>Sa Croquetera</h4>
+          <p class="dir-poble">Menorca</p>
+          <p>Obrador artesà de croquetes fetes a mà, de beixamel lenta i farcits de producte de l'illa. Petites, daurades i addictives.</p>
+          <p class="dir-nota"><em>Beixamel lenta, farcits de producte de l'illa i fregit fi: la croqueta que voldries saber fer a casa.</em></p>
+        </article>
+      </div>
+
+  <footer>D'Origen Espai Gastronòmic · Avinguda Fort de l'Eau, 66 · Maó, Menorca · <a href="https://dorigen-menorca.com">dorigen-menorca.com</a></footer>
+</section>
+
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "ItemList",
+ "name": "Productors i artesans locals de Menorca — D'Origen Espai Gastronòmic",
+ "description": "Directori de productors i artesans de Menorca amb qui treballa D'Origen Espai Gastronòmic (Maó): formatges, embotits, mel, oli, sal, cervesa, sidra, gin, licor d'herbes, melmelades, gelats, croquetes i caldos artesans.",
+ "url": "https://dorigen-menorca.com/productors",
+ "itemListElement": [
+  {
+   "@type": "ListItem",
+   "position": 1,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Santa Cecília",
+    "description": "Formatge ecològic elaborat amb llet de vaca vermella menorquina, la raça autòctona de l'illa. De la mateixa llet neixen també els seus gelats artesans, cremosos i de sabor net.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Ferreries",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.982,
+     "longitude": 3.988
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 2,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "D'en Vinent",
+    "description": "Formatge Mahón-Menorca de lloc, elaborat a la finca amb llet pròpia i el saber fer de generacions de formatgers maonesos.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Maó",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.905,
+     "longitude": 4.23
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 3,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Meloussa — Cooperativa del Camp",
+    "description": "La cooperativa del camp menorquí, que reuneix els ramaders de l'illa. Formatges Mahón-Menorca i, del mateix obrador, els embotits de sempre: sobrassada, carn-i-xua i fuet.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Es Mercadal",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.97,
+     "longitude": 4.075
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 4,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Es Tonedor",
+    "description": "Formatge de cabra artesà, de petit ramat i elaboració acurada. Frescor làctica i el caràcter singular de la cabra menorquina.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Maó (camí rural)",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.918,
+     "longitude": 4.205
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 5,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Binibèca",
+    "description": "Formatge madurat al vi amb herbes: l'escorça banyada en vi i el perfum de les herbes aromàtiques li donen un perfil únic i molt menorquí.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Sant Lluís",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.84,
+     "longitude": 4.235
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 6,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Hort de Sant Patrici",
+    "description": "Finca formatgera emblemàtica de Ferreries, amb museu del formatge propi. Elaboren el formatge d'herbes, el curat al fum i un fresc delicat.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Ferreries",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.993,
+     "longitude": 4.01
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 7,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Santa Margarida",
+    "description": "Finca artesana que elabora la torta al safrà i el curat amb safrà — formatges únics on l'or vermell perfuma la pasta — a més d'una mel de flora menorquina.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Menorca",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.94,
+     "longitude": 4.185
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 8,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Cala Blanc i Cala Blau",
+    "description": "Dos formatges germans que porten nom de mar: el Cala Blanc, suau i cremós, i el Cala Blau, de pasta blava amb caràcter.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Ciutadella",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 40.008,
+     "longitude": 3.87
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 9,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Tirant",
+    "description": "Formatge tendre amb herbes elaborat a la plana de Tirant, al nord de l'illa: pasta suau i el perfum fresc de les herbes menorquines.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Es Mercadal (zona de Tirant)",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 40.02,
+     "longitude": 4.098
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 10,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Torre d'en Quart",
+    "description": "Formatge fresc de finca, fet amb llet del dia: làctic, delicat i de vida curta, com mana la tradició.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Ciutadella",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.988,
+     "longitude": 3.905
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 11,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Can Lao",
+    "description": "Obrador artesà d'embotits menorquins: sobrassada i carn-i-xua elaborades segons les receptes de sempre.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Menorca",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.93,
+     "longitude": 4.15
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 12,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Hort d'en Borràs",
+    "description": "Fruita i verdura de temporada de l'horta de Sant Lluís, collida al punt just, amb el gust de la terra vermella de l'illa.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Sant Lluís",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.858,
+     "longitude": 4.245
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 13,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Mel i Untis",
+    "description": "Obrador artesà de mel de flora menorquina i melmelades de collita pròpia: pots petits, fruita de veritat i gens de pressa.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Menorca",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.87,
+     "longitude": 4.21
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 14,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Oli del Perico",
+    "description": "Oli d'oliva verge extra de finca menorquina, de collita primerenca i extracció en fred.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Menorca",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.945,
+     "longitude": 4.045
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 15,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Oli del Fornet",
+    "description": "Oli verge extra d'oliveres joves sobre sòl calcari menorquí, amb perfil fresc i herbaci.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Menorca",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 40.01,
+     "longitude": 3.93
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 16,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Salines de la Concepció",
+    "description": "Flor de sal collida a mà a les salines històriques de la Concepció, al nord de l'illa: sol, mar i vent de tramuntana.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Fornells (Es Mercadal)",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 40.043,
+     "longitude": 4.123
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 17,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Grahame Pearce",
+    "description": "El pioner de la cervesa artesana a Menorca: elaboracions de petit lot fetes a Sant Climent amb receptes pròpies.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Sant Climent (Maó)",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.862,
+     "longitude": 4.222
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 18,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Sidra d'en Kane",
+    "description": "Sidra artesana que ret homenatge al governador Kane, qui va portar les pomeres a l'illa. Poma menorquina i fermentació natural.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Es Mercadal",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.975,
+     "longitude": 4.12
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 19,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Glop — Gin Innat",
+    "description": "Gin Innat, de l'obrador Glop: un gin elaborat per maceració, deixant que els botànics de l'illa infusionin lentament el seu caràcter, sense passar per l'alambí.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Maó",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.889,
+     "longitude": 4.265
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 20,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Herbes de Biniarbolla",
+    "description": "Licor d'herbes elaborat amb la recepta dels monjos del Monte Toro: plantes de l'illa macerades amb paciència, com fa segles.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Es Mercadal (el Toro)",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.996,
+     "longitude": 4.115
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 21,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Sa Croquetera",
+    "description": "Obrador artesà de croquetes fetes a mà, de beixamel lenta i farcits de producte de l'illa. Petites, daurades i addictives.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Menorca",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.895,
+     "longitude": 4.24
+    }
+   }
+  },
+  {
+   "@type": "ListItem",
+   "position": 22,
+   "item": {
+    "@type": "LocalBusiness",
+    "name": "Mi Caldo",
+    "description": "Caldos artesans de cocció lenta, fets amb producte de proximitat i sense dreceres: fons de veritat per a la cuina de cada dia.",
+    "address": {
+     "@type": "PostalAddress",
+     "addressLocality": "Menorca",
+     "addressRegion": "Menorca, Illes Balears",
+     "addressCountry": "ES"
+    },
+    "geo": {
+     "@type": "GeoCoordinates",
+     "latitude": 39.885,
+     "longitude": 4.245
+    }
+   }
+  }
+ ]
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ICONES — traç fi estil gravat, en el color del context
+   ═══════════════════════════════════════════════════════════════ */
+const SVG_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
+const ICONS = {
+  formatge: SVG_OPEN +
+    '<path d="M3.5 16.2 L20.5 10.5 V17.5 H3.5 Z"/>' +
+    '<path d="M3.5 16.2 C3.5 13.8 6 12.4 7.6 13.4"/>' +
+    '<circle cx="9" cy="15.6" r=".9"/><circle cx="13.8" cy="14.6" r=".9"/><circle cx="17.3" cy="15.7" r=".7"/>' +
+    '</svg>',
+  mel: SVG_OPEN +
+    '<path d="M12 3 v5.2"/>' +
+    '<path d="M8.6 8.6 h6.8"/><path d="M9.1 10.7 h5.8"/><path d="M9.7 12.8 h4.6"/>' +
+    '<path d="M12 14.6 v1.6"/>' +
+    '<path d="M12 17.4 c-1.4 1.9 -1.4 3.4 0 3.4 c1.4 0 1.4 -1.5 0 -3.4 Z"/>' +
+    '</svg>',
+  oli: SVG_OPEN +
+    '<path d="M4.5 19 C9.5 15 14 10 19.5 5"/>' +
+    '<path d="M9.5 13.8 c2.6 -2.8 5.2 -3.2 5.2 -3.2 s-.4 2.6 -3.2 5.2"/>' +
+    '<path d="M14.5 8.8 c1.8 -2 3.8 -2.3 3.8 -2.3 s-.3 2 -2.3 3.8"/>' +
+    '<circle cx="7.2" cy="16.6" r="1.7"/><circle cx="11.6" cy="17.6" r="1.7"/>' +
+    '</svg>',
+  sal: SVG_OPEN +
+    '<path d="M5 18.5 q7 -8.5 14 0 Z"/>' +
+    '<path d="M10 8.5 l.02 0"/><path d="M13.5 6.5 l.02 0"/><path d="M12 11 l.02 0"/><path d="M15.5 9.5 l.02 0"/>' +
+    '</svg>',
+  cervesa: SVG_OPEN +
+    '<path d="M12 21 V5.5"/>' +
+    '<path d="M12 8.5 q-3.2 -.8 -3.8 -4.2 q3.2 .8 3.8 4.2"/><path d="M12 8.5 q3.2 -.8 3.8 -4.2 q-3.2 .8 -3.8 4.2"/>' +
+    '<path d="M12 12.5 q-3.2 -.8 -3.8 -4.2"/><path d="M12 12.5 q3.2 -.8 3.8 -4.2"/>' +
+    '<path d="M12 16.5 q-3.2 -.8 -3.8 -4.2"/><path d="M12 16.5 q3.2 -.8 3.8 -4.2"/>' +
+    '</svg>',
+  sidra: SVG_OPEN +
+    '<path d="M12 7.5 c-3.8 -2.8 -7.6 0 -7.1 4.7 c.4 4.3 3.8 7.6 7.1 6.2 c3.3 1.4 6.7 -1.9 7.1 -6.2 c.5 -4.7 -3.3 -7.5 -7.1 -4.7 Z"/>' +
+    '<path d="M12 7.5 c0 -1.9 1 -3.3 2.8 -3.9"/>' +
+    '</svg>',
+  gin: SVG_OPEN +
+    '<path d="M8 3.5 h8 c0 4.8 -1.6 7.8 -4 7.8 s-4 -3 -4 -7.8 Z"/>' +
+    '<path d="M12 11.3 v6.7"/><path d="M8.8 20.5 h6.4"/>' +
+    '<circle cx="10.9" cy="6" r=".9"/><circle cx="13.4" cy="7.6" r=".9"/>' +
+    '</svg>',
+  vi: SVG_OPEN +
+    '<path d="M12 7.8 V4"/>' +
+    '<path d="M12 4 q3 -2 5 0 q-2 2 -5 0"/>' +
+    '<circle cx="12" cy="10" r="1.9"/><circle cx="9.7" cy="13.2" r="1.9"/><circle cx="14.3" cy="13.2" r="1.9"/><circle cx="12" cy="16.4" r="1.9"/>' +
+    '</svg>',
+  herbes: SVG_OPEN +
+    '<path d="M12 21 V4.5"/>' +
+    '<path d="M12 7.5 q-4.5 .3 -6 -3 q4.5 -.3 6 3"/><path d="M12 7.5 q4.5 .3 6 -3 q-4.5 -.3 -6 3"/>' +
+    '<path d="M12 12 q-4 .3 -5.4 -2.7"/><path d="M12 12 q4 .3 5.4 -2.7"/>' +
+    '<path d="M12 16.5 q-3.4 .3 -4.7 -2.4"/><path d="M12 16.5 q3.4 .3 4.7 -2.4"/>' +
+    '</svg>',
+  camamilla: SVG_OPEN +
+    '<circle cx="12" cy="9" r="1.9"/>' +
+    '<path d="M12 6.8 q1.1 -3 0 -4.6 q-1.1 1.6 0 4.6"/>' +
+    '<path d="M13.9 10.1 q3.1 .7 4.5 -.1 q-1.4 -1.6 -4.5 -.9"/>' +
+    '<path d="M10.1 10.1 q-3.1 .7 -4.5 -.1 q1.4 -1.6 4.5 -.9"/>' +
+    '<path d="M13.4 7.4 q2.9 -1.5 3.3 -3.3 q-2.4 0 -3.9 2.2"/>' +
+    '<path d="M10.6 7.4 q-2.9 -1.5 -3.3 -3.3 q2.4 0 3.9 2.2"/>' +
+    '<path d="M12 10.9 V21"/>' +
+    '<path d="M12 16 q-2.6 -.2 -3.6 -2.4"/>' +
+    '</svg>',
+  safra: SVG_OPEN +
+    '<path d="M12 9 c-2 2.6 -2 7 0 9.6 c2 -2.6 2 -7 0 -9.6 Z"/>' +
+    '<path d="M12 10.5 c-2.8 -.9 -5 .4 -5.6 3.2 c2.6 1 4.6 -.2 5.6 -3.2"/>' +
+    '<path d="M12 10.5 c2.8 -.9 5 .4 5.6 3.2 c-2.6 1 -4.6 -.2 -5.6 -3.2"/>' +
+    '<path d="M12 18.6 V21"/>' +
+    '<path d="M12 9 l-2.2 -4.2"/><path d="M12 9 l0 -4.8"/><path d="M12 9 l2.2 -4.2"/>' +
+    '</svg>',
+  horta: SVG_OPEN +
+    '<path d="M12 20.5 c-2.8 -.4 -4.5 -2.8 -4.2 -5.2 c.3 -2.3 2 -3.8 4.2 -3.8 s3.9 1.5 4.2 3.8 c.3 2.4 -1.4 4.8 -4.2 5.2 Z"/>' +
+    '<path d="M12 20.5 v1.8"/>' +
+    '<path d="M12 11.5 q-1.2 -4 -4.2 -5.4"/><path d="M12 11.5 V5"/><path d="M12 11.5 q1.2 -4 4.2 -5.4"/>' +
+    '</svg>',
+  melmelada: SVG_OPEN +
+    '<path d="M8 8.5 h8 v9.5 a2 2 0 0 1 -2 2 h-4 a2 2 0 0 1 -2 -2 Z"/>' +
+    '<rect x="8.7" y="4.2" width="6.6" height="2.8" rx="1.2"/>' +
+    '<path d="M8 11.8 h8"/>' +
+    '<circle cx="10.8" cy="15" r="1"/><circle cx="13.6" cy="16.4" r="1"/>' +
+    '</svg>',
+  caldo: SVG_OPEN +
+    '<path d="M4.5 13 h15 c0 4.4 -3.4 7.5 -7.5 7.5 s-7.5 -3.1 -7.5 -7.5 Z"/>' +
+    '<path d="M9.5 10.2 q1.1 -1.5 0 -3 q-1.1 -1.5 0 -3"/>' +
+    '<path d="M14.5 10.2 q1.1 -1.5 0 -3 q-1.1 -1.5 0 -3"/>' +
+    '</svg>',
+  gelat: SVG_OPEN +
+    '<path d="M8.2 10.5 L12 21 L15.8 10.5"/>' +
+    '<path d="M7.5 10.5 c-.8 -4 1.6 -7 4.5 -7 s5.3 3 4.5 7 Z"/>' +
+    '<path d="M9.3 10.5 L11 15.2"/><path d="M14.7 10.5 L13 15.2"/>' +
+    '</svg>',
+  croqueta: SVG_OPEN +
+    '<ellipse cx="12" cy="12" rx="7.5" ry="4.6"/>' +
+    '<path d="M9 11 l.02 0"/><path d="M12.5 10.2 l.02 0"/><path d="M14.8 12.4 l.02 0"/><path d="M10.5 13.4 l.02 0"/>' +
+    '<path d="M5.5 18.5 q6.5 2.5 13 0"/>' +
+    '</svg>',
+  tots: SVG_OPEN +
+    '<circle cx="12" cy="12" r="8.5"/>' +
+    '<path d="M12 3.5 V6"/><path d="M12 18 v2.5"/><path d="M3.5 12 H6"/><path d="M18 12 h2.5"/>' +
+    '<path d="M12 12 L15 9"/><circle cx="12" cy="12" r="1"/>' +
+    '</svg>'
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   DADES — EDITA AQUÍ
+   Cada productor: nom, poble, coords [lat, lng], categories (una o
+   més), descripció i "vincle" (què li comprem).
+   ⚠ Les coordenades i els productors marcats amb ⚠ són provisionals:
+   ajusta'ls (Google Maps: clic dret → copiar coordenades).
+   ═══════════════════════════════════════════════════════════════ */
+
+const CATEGORIES = [
+  { id:"formatge",  nom:"Formatges i embotits" },
+  { id:"horta",     nom:"Fruita i verdura" },
+  { id:"mel",       nom:"Mel" },
+  { id:"melmelada", nom:"Melmelades" },
+  { id:"oli",       nom:"Oli" },
+  { id:"sal",       nom:"Sal" },
+  { id:"cervesa",   nom:"Cervesa" },
+  { id:"sidra",     nom:"Sidra" },
+  { id:"gin",       nom:"Gin" },
+  { id:"herbes",    nom:"Licor d'herbes" },
+  { id:"caldo",     nom:"Caldos artesans" },
+  { id:"gelat",     nom:"Gelats" },
+  { id:"croqueta",  nom:"Croquetes" },
+  { id:"vi",        nom:"Vi" },              // sense productors: no es mostra fins que n'afegeixis
+  { id:"camamilla", nom:"Camamil·la" },      // idem
+  { id:"safra",     nom:"Safrà" },           // idem
+];
+
+const PRODUCTORS = [
+  /* ─── FORMATGES ─── */
+  {
+    nom:"Santa Cecília",
+    poble:"Ferreries",
+    coords:[39.982, 3.988],           // ⚠ aproximat — verifica
+    categories:["formatge","gelat"],
+    desc:"Formatge ecològic elaborat amb llet de vaca vermella menorquina, la raça autòctona de l'illa. De la mateixa llet neixen també els seus gelats artesans, cremosos i de sabor net.",
+    vincle:"La llet de vaca vermella dona un formatge d'una cremositat i una profunditat que no es troben enlloc més — i els seus gelats en són la prova dolça."
+  },
+  {
+    nom:"D'en Vinent",
+    poble:"Maó",
+    coords:[39.905, 4.230],           // ⚠ aproximat — verifica
+    categories:["formatge"],
+    desc:"Formatge Mahón-Menorca de lloc, elaborat a la finca amb llet pròpia i el saber fer de generacions de formatgers maonesos.",
+    vincle:"El punt just de maduració: mantegós a l'entrada, amb aquella coïssor final que fa gran el formatge de Maó."
+  },
+  {
+    nom:"Meloussa — Cooperativa del Camp",
+    poble:"Es Mercadal",              // ⚠ verifica seu de la cooperativa
+    coords:[39.970, 4.075],
+    categories:["formatge"],
+    desc:"La cooperativa del camp menorquí, que reuneix els ramaders de l'illa. Formatges Mahón-Menorca i, del mateix obrador, els embotits de sempre: sobrassada, carn-i-xua i fuet.",
+    vincle:"Sobrassada, carn-i-xua i fuet com es feien abans: pebre vermell honest, greix noble i gens de pressa."
+  },
+  {
+    nom:"Es Tonedor",
+    poble:"Maó (camí rural)",
+    coords:[39.918, 4.205],           // ⚠ aproximat — verifica
+    categories:["formatge"],
+    desc:"Formatge de cabra artesà, de petit ramat i elaboració acurada. Frescor làctica i el caràcter singular de la cabra menorquina.",
+    vincle:"Un cabra net i fresc, gens agressiu, que convenç fins i tot els qui diuen que el formatge de cabra no els agrada."
+  },
+  {
+    nom:"Binibèca",
+    poble:"Sant Lluís",
+    coords:[39.840, 4.235],           // ⚠ aproximat — verifica
+    categories:["formatge"],
+    desc:"Formatge madurat al vi amb herbes: l'escorça banyada en vi i el perfum de les herbes aromàtiques li donen un perfil únic i molt menorquí.",
+    vincle:"L'escorça banyada al vi amb herbes perfuma la pasta sense tapar-la: un formatge que explica Menorca a cada tall."
+  },
+  {
+    nom:"Hort de Sant Patrici",
+    poble:"Ferreries",
+    coords:[39.993, 4.010],           // ⚠ aproximat — verifica
+    categories:["formatge"],
+    desc:"Finca formatgera emblemàtica de Ferreries, amb museu del formatge propi. Elaboren el formatge d'herbes, el curat al fum i un fresc delicat.",
+    vincle:"El fumat és subtil, de llenya i no d'artifici, i el d'herbes fa olor de camp menorquí a la primavera."
+  },
+  {
+    nom:"Santa Margarida",
+    poble:"Menorca",                  // ⚠ indica'm el poble exacte
+    coords:[39.940, 4.185],
+    categories:["formatge","mel"],
+    desc:"Finca artesana que elabora la torta al safrà i el curat amb safrà — formatges únics on l'or vermell perfuma la pasta — a més d'una mel de flora menorquina.",
+    vincle:"El safrà dona a la torta un perfum i un color d'or que no s'obliden — i la seva mel tanca el cercle a la taula."
+  },
+  {
+    nom:"Cala Blanc i Cala Blau",
+    poble:"Ciutadella",               // ⚠ indica'm qui els elabora i on
+    coords:[40.008, 3.870],
+    categories:["formatge"],
+    desc:"Dos formatges germans que porten nom de mar: el Cala Blanc, suau i cremós, i el Cala Blau, de pasta blava amb caràcter.",
+    vincle:"Dos caràcters oposats que es complementen: la cremositat amable del Blanc i la punta salvatge del Blau."
+  },
+  {
+    nom:"Tirant",
+    poble:"Es Mercadal (zona de Tirant)",
+    coords:[40.020, 4.098],           // ⚠ aproximat — verifica
+    categories:["formatge"],
+    desc:"Formatge tendre amb herbes elaborat a la plana de Tirant, al nord de l'illa: pasta suau i el perfum fresc de les herbes menorquines.",
+    vincle:"Tendre, làctic i amb les herbes al punt just: la porta d'entrada perfecta als formatges de l'illa."
+  },
+  {
+    nom:"Torre d'en Quart",
+    poble:"Ciutadella",               // ⚠ aproximat — verifica
+    coords:[39.988, 3.905],
+    categories:["formatge"],
+    desc:"Formatge fresc de finca, fet amb llet del dia: làctic, delicat i de vida curta, com mana la tradició.",
+    vincle:"Un fresc que sap a llet del dia: humil, delicat i imprescindible quan arriba la calor."
+  },
+  {
+    nom:"Can Lao",
+    poble:"Menorca",                  // ⚠ indica'm el poble exacte
+    coords:[39.930, 4.150],
+    categories:["formatge"],
+    desc:"Obrador artesà d'embotits menorquins: sobrassada i carn-i-xua elaborades segons les receptes de sempre.",
+    vincle:"Sobrassada de tall generós i carn-i-xua amb aquell equilibri de magre i greix que només dona l'ofici."
+  },
+
+  /* ─── FRUITA I VERDURA ─── */
+  {
+    nom:"Hort d'en Borràs",
+    poble:"Sant Lluís",
+    coords:[39.858, 4.245],           // ⚠ aproximat — verifica
+    categories:["horta"],
+    desc:"Fruita i verdura de temporada de l'horta de Sant Lluís, collida al punt just, amb el gust de la terra vermella de l'illa.",
+    vincle:"Collit al matí, a la botiga al migdia: el gust que la terra vermella dona a un tomàquet no s'explica, es tasta."
+  },
+
+  /* ─── MEL I MELMELADES ─── */
+  {
+    nom:"Mel i Untis",
+    poble:"Menorca",                  // ⚠ indica'm el poble exacte
+    coords:[39.870, 4.210],
+    categories:["mel","melmelada"],
+    desc:"Obrador artesà de mel de flora menorquina i melmelades de collita pròpia: pots petits, fruita de veritat i gens de pressa.",
+    vincle:"Mel de flora menorquina i melmelades amb més fruita que sucre: pots petits, sabor gran."
+  },
+
+  /* ─── OLI ─── */
+  {
+    nom:"Oli del Perico",
+    poble:"Menorca",                  // ⚠ indica'm el poble exacte
+    coords:[39.945, 4.045],
+    categories:["oli"],
+    desc:"Oli d'oliva verge extra de finca menorquina, de collita primerenca i extracció en fred.",
+    vincle:"Collita primerenca: verd, herbaci i amb aquella picantor final que demana un tros de pa moreno."
+  },
+  {
+    nom:"Oli del Fornet",
+    poble:"Menorca",                  // ⚠ indica'm el poble exacte
+    coords:[40.010, 3.930],
+    categories:["oli"],
+    desc:"Oli verge extra d'oliveres joves sobre sòl calcari menorquí, amb perfil fresc i herbaci.",
+    vincle:"Un verge extra fresc i net, d'oliveres sobre sòl calcari, perfecte per acabar un plat en cru."
+  },
+
+  /* ─── SAL ─── */
+  {
+    nom:"Salines de la Concepció",
+    poble:"Fornells (Es Mercadal)",
+    coords:[40.043, 4.123],           // ⚠ aproximat — verifica
+    categories:["sal"],
+    desc:"Flor de sal collida a mà a les salines històriques de la Concepció, al nord de l'illa: sol, mar i vent de tramuntana.",
+    vincle:"Flor de sal que cruix i es fon: la tramuntana i el sol de Fornells recollits en un cristall."
+  },
+
+  /* ─── CERVESA ─── */
+  {
+    nom:"Grahame Pearce",
+    poble:"Sant Climent (Maó)",
+    coords:[39.862, 4.222],           // ⚠ aproximat — verifica
+    categories:["cervesa"],
+    desc:"El pioner de la cervesa artesana a Menorca: elaboracions de petit lot fetes a Sant Climent amb receptes pròpies.",
+    vincle:"Cerveses de petit lot amb personalitat pròpia: qui va demostrar que a Menorca també es fa gran cervesa."
+  },
+
+  /* ─── SIDRA ─── */
+  {
+    nom:"Sidra d'en Kane",
+    poble:"Es Mercadal",              // ⚠ verifica poble
+    coords:[39.975, 4.120],
+    categories:["sidra"],
+    desc:"Sidra artesana que ret homenatge al governador Kane, qui va portar les pomeres a l'illa. Poma menorquina i fermentació natural.",
+    vincle:"Poma de l'illa i fermentació natural: seca, viva i amb la història del governador que va plantar les pomeres."
+  },
+
+  /* ─── GIN ─── */
+  {
+    nom:"Glop — Gin Innat",
+    poble:"Maó",                      // ⚠ verifica poble
+    coords:[39.889, 4.265],
+    categories:["gin"],
+    desc:"Gin Innat, de l'obrador Glop: un gin elaborat per maceració, deixant que els botànics de l'illa infusionin lentament el seu caràcter, sense passar per l'alambí.",
+    vincle:"La maceració lenta li dona una expressió botànica més directa i silvestre: un gin que sap a Menorca sense filtres."
+  },
+
+  /* ─── LICOR D'HERBES ─── */
+  {
+    nom:"Herbes de Biniarbolla",
+    poble:"Es Mercadal (el Toro)",    // ⚠ verifica poble
+    coords:[39.996, 4.115],
+    categories:["herbes"],
+    desc:"Licor d'herbes elaborat amb la recepta dels monjos del Monte Toro: plantes de l'illa macerades amb paciència, com fa segles.",
+    vincle:"La recepta dels monjos del Toro: herbes de veritat, dolçor mesurada i el gust de sempre per acabar un sopar."
+  },
+
+  /* ─── CROQUETES ─── */
+  {
+    nom:"Sa Croquetera",
+    poble:"Menorca",                  // ⚠ indica'm el poble exacte
+    coords:[39.895, 4.240],
+    categories:["croqueta"],
+    desc:"Obrador artesà de croquetes fetes a mà, de beixamel lenta i farcits de producte de l'illa. Petites, daurades i addictives.",
+    vincle:"Beixamel lenta, farcits de producte de l'illa i fregit fi: la croqueta que voldries saber fer a casa."
+  },
+
+  /* ─── CALDOS ─── */
+  {
+    nom:"Mi Caldo",
+    poble:"Menorca",                  // ⚠ indica'm el poble exacte
+    coords:[39.885, 4.245],
+    categories:["caldo"],
+    desc:"Caldos artesans de cocció lenta, fets amb producte de proximitat i sense dreceres: fons de veritat per a la cuina de cada dia.",
+    vincle:"Cocció lenta i producte de proximitat: fons nets i profunds que salven qualsevol plat d'hivern."
+  },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   SILUETA REAL DE MENORCA (GeoJSON oficial, 8 municipis)
+   ═══════════════════════════════════════════════════════════════ */
+const MENORCA = {"type":"FeatureCollection","features":[{"type":"Feature","id":"07064","properties":{"name":"es Castell"},"geometry":{"type":"Polygon","coordinates":[[[4.264809328835884,39.86478983381078],[4.276054936186618,39.88417736026503],[4.294047907947796,39.88094610585598],[4.307542636768677,39.86478983381078],[4.303044393828383,39.8421710529475],[4.291798786477649,39.85186481617462],[4.269307571776178,39.84863356176558],[4.264809328835884,39.86478983381078]]]}},{"type":"Feature","id":"07015","properties":{"name":"Ciutadella de Menorca"},"geometry":{"type":"MultiPolygon","coordinates":[[[[3.9836691450675055,40.052202589535156],[3.9881673880078026,40.04412445351255],[3.9724235377167716,39.99565563737694],[3.9611779303660377,39.98757750135434],[3.967925294776478,39.96818997490009],[3.956679687425744,39.93910868521873],[3.895953407731774,39.92295241317352],[3.8217323992169234,39.92295241317352],[3.82398152068707,39.95203370285489],[3.835227128037804,39.96011183887749],[3.826230642157217,39.99565563737694],[3.7947429415751586,40.0005025189905],[3.792493820105012,40.01989004544475],[3.810486791866186,40.02958380867187],[3.8217323992169234,40.050586962330634],[3.853220099798982,40.0554338439442],[3.8779604359705964,40.052202589535156],[3.898202529201921,40.06028072555776],[3.9094481365526548,40.04897133512611],[3.920693743903392,40.057049471148716],[3.958928808895891,40.061896352762275],[3.9836691450675055,40.052202589535156]]]]}},{"type":"Feature","id":"07002","properties":{"name":"Alaior"},"geometry":{"type":"Polygon","coordinates":[[[4.055641032112213,39.90679614112831],[4.05789015358236,39.92779929478708],[4.078132246813681,39.95688058446845],[4.114118190336033,39.96334309328653],[4.136609405037504,39.95526495726393],[4.150104133858385,39.96334309328653],[4.199584806201621,39.969805602104614],[4.206332170612061,39.94395556683229],[4.188339198850887,39.93103054919612],[4.204083049141914,39.914874277150915],[4.2018339276717676,39.90194925951475],[4.18384095591059,39.89387112349215],[4.190588320321034,39.88094610585598],[4.170346227089709,39.877714851446946],[4.1568514982688285,39.855096070583656],[4.098374340045005,39.87933047865147],[4.055641032112213,39.90679614112831]]]}},{"type":"Feature","id":"07023","properties":{"name":"Ferreries"},"geometry":{"type":"MultiPolygon","coordinates":[[[[3.9836691450675055,40.052202589535156],[4.015156845649564,40.0554338439442],[4.012907724179417,40.018274418240225],[4.030900695940595,40.02796818146735],[4.046644546231622,40.01665879103571],[4.0443954247614755,39.99888689178598],[4.0646375179928,39.99404001017242],[4.046644546231622,39.97303685651365],[4.030900695940595,39.97303685651365],[4.00391123829883,39.95041807565037],[3.9881673880078026,39.93103054919612],[3.956679687425744,39.93910868521873],[3.967925294776478,39.96818997490009],[3.9611779303660377,39.98757750135434],[3.9724235377167716,39.99565563737694],[3.9881673880078026,40.04412445351255],[3.9836691450675055,40.052202589535156]]]]}},{"type":"Feature","id":"07032","properties":{"name":"Maó"},"geometry":{"type":"MultiPolygon","coordinates":[[[[4.199584806201621,39.969805602104614],[4.213079535022501,39.97788373812722],[4.206332170612061,39.99404001017242],[4.246816357074707,40.0005025189905],[4.258061964425444,39.99565563737694],[4.255812842955297,39.96334309328653],[4.282802300597059,39.94395556683229],[4.276054936186618,39.93264617640064],[4.285051422067205,39.91164302274188],[4.30529351529853,39.89710237790119],[4.309791758238823,39.877714851446946],[4.2738058147164715,39.89387112349215],[4.276054936186618,39.88417736026503],[4.264809328835884,39.86478983381078],[4.231072506783679,39.86317420660626],[4.208581292082208,39.84863356176558],[4.2018339276717676,39.834092916924895],[4.1568514982688285,39.855096070583656],[4.170346227089709,39.877714851446946],[4.190588320321034,39.88094610585598],[4.18384095591059,39.89387112349215],[4.2018339276717676,39.90194925951475],[4.204083049141914,39.914874277150915],[4.188339198850887,39.93103054919612],[4.206332170612061,39.94395556683229],[4.199584806201621,39.969805602104614]]]]}},{"type":"Feature","id":"07037","properties":{"name":"Es Mercadal"},"geometry":{"type":"MultiPolygon","coordinates":[[[[4.206332170612061,39.99404001017242],[4.213079535022501,39.97788373812722],[4.199584806201621,39.969805602104614],[4.150104133858385,39.96334309328653],[4.136609405037504,39.95526495726393],[4.114118190336033,39.96334309328653],[4.078132246813681,39.95688058446845],[4.07138488240324,39.97142122930913],[4.046644546231622,39.97303685651365],[4.0646375179928,39.99404001017242],[4.0443954247614755,39.99888689178598],[4.046644546231622,40.01665879103571],[4.030900695940595,40.02796818146735],[4.012907724179417,40.018274418240225],[4.015156845649564,40.0554338439442],[4.033149817410742,40.06512760717132],[4.048893667701769,40.052202589535156],[4.087128732694271,40.068358861580364],[4.102872582985299,40.04412445351255],[4.134360283567357,40.0635119799668],[4.123114676216623,40.03766194469447],[4.138858526507651,40.03281506308091],[4.136609405037504,40.06674323437584],[4.165847984149416,40.05866509835324],[4.159100619738975,40.04250882630804],[4.181591834440443,40.02150567264927],[4.188339198850887,40.03443069028543],[4.2018339276717676,40.01989004544475],[4.206332170612061,39.99404001017242]]]]}},{"type":"Feature","id":"07052","properties":{"name":"Sant Lluís"},"geometry":{"type":"MultiPolygon","coordinates":[[[[4.264809328835884,39.86478983381078],[4.269307571776178,39.84863356176558],[4.291798786477649,39.85186481617462],[4.303044393828383,39.8421710529475],[4.296297029417943,39.822783526493254],[4.271556693246325,39.80824288165257],[4.240068992664266,39.81632101767517],[4.2018339276717676,39.834092916924895],[4.208581292082208,39.84863356176558],[4.231072506783679,39.86317420660626],[4.264809328835884,39.86478983381078]]]]}},{"type":"Feature","id":"07902","properties":{"name":"Es Migjorn Gran"},"geometry":{"type":"MultiPolygon","coordinates":[[[[4.046644546231622,39.97303685651365],[4.07138488240324,39.97142122930913],[4.078132246813681,39.95688058446845],[4.05789015358236,39.92779929478708],[4.055641032112213,39.90679614112831],[3.9881673880078026,39.93103054919612],[4.00391123829883,39.95041807565037],[4.030900695940595,39.97303685651365],[4.046644546231622,39.97303685651365]]]]}}]};
+
+/* ═══════════════════════════════════════════════════════════════
+   LÒGICA — normalment no cal tocar res d'aquí en avall
+   ═══════════════════════════════════════════════════════════════ */
+
+const map = L.map('map', {
+  zoomControl:true,
+  attributionControl:false,
+  minZoom:9.5,
+  maxZoom:14,
+  zoomSnap:0.25,
+  maxBounds:[[39.60, 3.55],[40.28, 4.55]]
+});
+
+const illa = L.geoJSON(MENORCA, {
+  style:{
+    color:'#B8956A',
+    weight:1,
+    dashArray:'3 3',
+    fillColor:'#F2D3B1',
+    fillOpacity:1
+  }
+}).addTo(map);
+
+L.geoJSON(MENORCA, {
+  style:{ color:'#3C0F12', weight:2, fill:false, dashArray:null }
+}).addTo(map);
+
+/* Posicions manuals de les etiquetes (ajusta-les si cal) */
+const LABEL_POS = {
+  'Ciutadella de Menorca': [39.988, 3.880],
+  'Ferreries':             [39.966, 3.990],
+  'Es Migjorn Gran':       [39.926, 4.043],
+  'Es Mercadal':           [40.006, 4.068],
+  'Alaior':                [39.912, 4.135],
+  'Maó':                   [39.906, 4.252],
+  'es Castell':            [39.866, 4.318],
+  'Sant Lluís':            [39.826, 4.276],
+};
+illa.eachLayer(l => {
+  let nom = (l.feature.properties && l.feature.properties.name) || '';
+  if (!nom) return;
+  const pos = LABEL_POS[nom] || l.getBounds().getCenter();
+  if (nom === 'Ciutadella de Menorca') nom = 'Ciutadella';
+  if (nom === 'es Castell') nom = 'Es Castell';
+  L.marker(pos, {
+    interactive:false,
+    icon:L.divIcon({ className:'muni-label', html:nom, iconSize:[130,14], iconAnchor:[65,7] })
+  }).addTo(map);
+});
+/* Amaga les etiquetes quan el mapa està molt allunyat */
+function toggleMuniLabels(){
+  map.getContainer().classList.toggle('hide-muni', map.getZoom() < 9.9);
+}
+map.on('zoomend', toggleMuniLabels);
+toggleMuniLabels();
+
+map.fitBounds(illa.getBounds().pad(0.08));
+
+let activeCategory = null;   // null = mapa net; 'all' = tots
+let markers = [];
+let selectedMarker = null;
+const mapHint = document.getElementById('mapHint');
+
+function makeIcon(catId, selected, delay){
+  const style = delay != null ? ` style="animation-delay:${delay}ms"` : '';
+  return L.divIcon({
+    className:'',
+    html:`<div class="medallion${selected?' selected':''}"${style}>${ICONS[catId] || ICONS.tots}</div>`,
+    iconSize:[42,42],
+    iconAnchor:[21,21]
+  });
+}
+
+function iconCatFor(p){
+  return (activeCategory && activeCategory !== 'all' && p.categories.includes(activeCategory))
+    ? activeCategory
+    : p.categories[0];
+}
+
+function renderMarkers(){
+  markers.forEach(m => map.removeLayer(m.marker));
+  markers = [];
+  closeFicha();
+
+  if (!activeCategory){
+    map.fitBounds(illa.getBounds().pad(0.08));
+    mapHint.classList.remove('hidden');
+    return;
+  }
+  mapHint.classList.add('hidden');
+
+  const visibles = PRODUCTORS.filter(p =>
+    activeCategory === 'all' || p.categories.includes(activeCategory)
+  );
+  visibles.forEach((p, i) => {
+    const cat = iconCatFor(p);
+    const marker = L.marker(p.coords, { icon: makeIcon(cat, false, i * 90) })
+      .addTo(map)
+      .on('click', () => openFicha(p, marker, cat));
+    marker._cat = cat;
+    markers.push({ marker, prod:p });
+  });
+  if (visibles.length){
+    const group = L.featureGroup(markers.map(m => m.marker));
+    map.fitBounds(group.getBounds().pad(0.35));
+  }
+}
+
+/* ── Fitxa ── */
+const ficha = document.getElementById('ficha');
+function openFicha(p, marker, cat){
+  if (selectedMarker) selectedMarker.setIcon(makeIcon(selectedMarker._cat, false));
+  marker.setIcon(makeIcon(cat, true));
+  selectedMarker = marker;
+
+  document.getElementById('fCat').textContent =
+    p.categories.map(c => CATEGORIES.find(k => k.id===c)?.nom || c).join(' · ');
+  document.getElementById('fNom').textContent = p.nom;
+  document.getElementById('fLloc').textContent = p.poble;
+  document.getElementById('fDesc').textContent = p.desc;
+  document.getElementById('fVincle').textContent = p.vincle;
+
+  const prods = document.getElementById('fProds');
+  prods.innerHTML = '';
+  p.categories.forEach(c => {
+    const catDef = CATEGORIES.find(k => k.id===c);
+    const tag = document.createElement('span');
+    tag.innerHTML = (ICONS[c]||'') + (catDef?.nom||c);
+    prods.appendChild(tag);
+  });
+
+  ficha.classList.add('open');
+  map.panTo(p.coords, { animate:true });
+}
+function closeFicha(){
+  ficha.classList.remove('open');
+  if (selectedMarker){
+    selectedMarker.setIcon(makeIcon(selectedMarker._cat, false));
+    selectedMarker = null;
+  }
+}
+document.getElementById('fichaClose').addEventListener('click', closeFicha);
+map.on('click', closeFicha);
+
+/* ── Menú de productes ── */
+const nav = document.getElementById('productNav');
+function countFor(catId){
+  return PRODUCTORS.filter(p => p.categories.includes(catId)).length;
+}
+function renderNav(){
+  nav.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'prod-btn' + (activeCategory==='all' ? ' active':'');
+  all.innerHTML = `<span class="lbl"><span class="ic">${ICONS.tots}</span>Tots els productors</span><span class="count">${PRODUCTORS.length}</span>`;
+  all.addEventListener('click', () => {
+    activeCategory = (activeCategory==='all') ? null : 'all';
+    renderNav(); renderMarkers();
+  });
+  nav.appendChild(all);
+
+  CATEGORIES.forEach(cat => {
+    const n = countFor(cat.id);
+    if (!n) return;
+    const b = document.createElement('button');
+    b.className = 'prod-btn' + (activeCategory===cat.id ? ' active':'');
+    b.innerHTML = `<span class="lbl"><span class="ic">${ICONS[cat.id]||''}</span>${cat.nom}</span><span class="count">${n}</span>`;
+    b.addEventListener('click', () => {
+      activeCategory = (activeCategory===cat.id) ? null : cat.id;
+      renderNav(); renderMarkers();
+    });
+    nav.appendChild(b);
+  });
+}
+
+renderNav();
+renderMarkers();
+</script>
+</body>
+</html>

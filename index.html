@@ -119,7 +119,7 @@ html,body{background:#FFF9F3;font-family:'Cormorant Garamond',Georgia,serif;colo
   <p class="lang-subtitle">Provisioning & Gourmet Shop · Maó, Menorca</p>
   <div class="lang-buttons">
     <button class="lang-btn" onclick="setLang('ca')">
-      <span class="lang-flag">🏝️</span>
+      <span class="lang-flag" style="font-weight:700;letter-spacing:.04em;">CAT</span>
       Català
     </button>
     <button class="lang-btn" onclick="setLang('en')">
@@ -191,13 +191,17 @@ html,body{background:#FFF9F3;font-family:'Cormorant Garamond',Georgia,serif;colo
   <label class="flbl" id="lblMarina"></label>
   <select class="marina-select" id="marina">
     <option value="">— Selecciona marinería / Select marina —</option>
-    <option value="Marina Port Mahón" data-email="capitania@marinaportmahon.com" data-email2="recepcion@marinaportmahon.com">Marina Port Mahón</option>
+    <option value="Marina Port Mahón" data-email="capitania@marinaportmahon.com" data-email2="recepcion@marinaportmahon.com" selected>Marina Port Mahón</option>
+    <option value="Club Nàutic de Maó" data-email="">Club Nàutic de Maó</option>
     <option value="Marina del Rei" data-email="operaciones@marinadelrei.com">Marina del Rei</option>
     <option value="Port de Llevant" data-email="reserves@portdellevant.com">Port de Llevant</option>
     <option value="Otro / Other" data-email="">Otro / Other</option>
   </select>
   <label class="flbl" id="lblDelivery"></label>
-  <input class="finput" id="delivery" type="date" min="">
+  <input class="finput" id="delivery" type="date" min="" onchange="onDeliveryDateChange()">
+  <label class="flbl" id="lblDeliverySlot"></label>
+  <select class="marina-select" id="deliverySlot"></select>
+  <div id="sundayNotice" style="display:none;background:rgba(60,15,18,.08);border-left:3px solid #3C0F12;padding:11px 15px;font-style:italic;font-size:13px;color:#3C0F12;margin-top:8px;"></div>
   <label class="flbl" id="lblPax"></label>
   <input class="finput" id="pax" type="number" min="1">
   <label class="flbl" id="lblNotes"></label>
@@ -289,8 +293,16 @@ const T = {
       {value:"Urgente / Domingo", label:"⚡ Urgent or Sunday — price on request"},
     ],
     urgentNotice: "Urgent orders and Sunday deliveries (morning only) are subject to a supplement. Please contact us.",
+    lblDeliverySlot: "Delivery time slot *",
+    deliverySlots: [
+      {value:"", label:"— Select time slot —"},
+      {value:"09:00h en pantalán", label:"🌅 9:00am at the berth — orders before 8:00pm"},
+      {value:"14:00h en pantalán", label:"☀️ 2:00pm at the berth — orders before 11:00am"},
+      {value:"21:30h", label:"🌙 9:30pm — subject to availability, please check with us"},
+    ],
+    sundayNotice: "On Sundays, delivery is only available at 2:00pm.",
     lblMarina: "Marina / Port *",
-    lblDelivery: "Delivery date * (minimum 24h in advance)",
+    lblDelivery: "Delivery date *",
     lblPax: "Number of guests",
     lblNotes: "Special requests / allergies",
     phBoat: "e.g. Lady Blue",
@@ -317,15 +329,18 @@ const T = {
     waNotes: "📝 *Special requests:*",
     waTagline: "_Uncork Your Senses 🌊_",
     paymentReminder: "Please remember to visit Marina Port Mahón reception to complete your payment.",
-    timingNotice: "Orders must be placed at least 24 hours in advance. We deliver every morning. For large orders, stock availability is subject to prior confirmation.",
+    timingNotice: "We confirm your delivery time slot directly with you by phone or WhatsApp. For large orders, stock availability is subject to prior confirmation.",
     timingLabel: "Important",
     emailSubject: "Provisioning Order — D'Origen",
     sendEmail: "Send order by Email",
     consultLabel: "on request",
+    bestTag: "★ Bestseller",
     limitedStock: "⚠ Limited Stock — Subject to availability",
     stockConfirm: "For large orders, stock subject to confirmation.",
     jewNote: "Fine wines personally selected by Sara Sanchís. Limited availability — price on request.",
     cats: {
+      "🥐 PACK ESMORZAR — Desayuno para 2":"🥐 BREAKFAST PACK — Breakfast for 2",
+      "🌅 SUNSET D'ORIGEN — Tabla Ibéricos + Vino + Gildas":"🌅 SUNSET D'ORIGEN — Ibérico Board + Wine + Gildas",
       "⚓ ESPECIAL SALIDAS EN BARCO":"⚓ BOAT EXPERIENCE",
       "🧀 TABLAS GOURMET — Caja Kraft · 4-6 personas":"🧀 GOURMET BOARDS — Kraft Box · 4-6 persons",
       "DESAYUNO Y PANADERÍA":"BREAKFAST & BAKERY",
@@ -352,6 +367,8 @@ const T = {
       "✉ BAJO ENCARGO — CONSÚLTANOS":"✉ ON REQUEST — ASK US",
     },
     notes: {
+      "Desayuno completo listo para disfrutar a bordo o en casa":"Full breakfast ready to enjoy on board or at home",
+      "El pack perfecto para el atardecer: listo para descorchar y disfrutar, sin encargo previo":"The perfect pack for sunset: ready to uncork and enjoy, no pre-order needed",
       "Focaccias artesanales elaboradas cada mañana con harinas ecológicas · Chef Sergio Loris":"Artisan focaccias baked every morning with organic flours · Chef Sergio Loris",
       "Presentadas en caja Kraft · Pensadas para 4-6 personas":"Presented in Kraft box · Designed for 4-6 persons",
       "Helados artesanos elaborados con leche de Vaca Vermella Menorquina · Tarrina 135ml":"Artisan ice cream made with Menorcan Vaca Vermella milk · 135ml tub",
@@ -359,6 +376,8 @@ const T = {
       "¿No encuentras lo que buscas? Contáctanos — podemos conseguir casi cualquier producto gourmet.":"Can't find what you're looking for? Contact us — we can source almost any gourmet product.",
     },
     products: {
+      "Pack Esmorzar — 2 Pain au Chocolat, Pan de Masa Madre, Mermelada de Menorca y Mantequilla Artesana":"Breakfast Pack — 2 Pain au Chocolat, Sourdough Loaf, Menorca Jam & Artisan Butter",
+      "Sunset D'Origen — Tabla de Ibéricos, Botella Alba Rosé y 8 Gildas":"Sunset D'Origen — Ibérico Board, Bottle of Alba Rosé and 8 Gildas",
       "Focaccia La Italiana — Mortadela, Scamorza Ahumada, Rúcula y Pesto":"Focaccia La Italiana — Mortadella, Smoked Scamorza, Rocket & Pesto",
       "Focaccia La Pastrami Deluxe — Pastrami, Cheddar, Salsa Tártara y Espinacas":"Focaccia La Pastrami Deluxe — Pastrami, Cheddar, Tartare Sauce & Spinach",
       "Focaccia La Menorquina — Sobrasada, Miel de Menorca y Rúcula":"Focaccia La Menorquina — Sobrasada, Menorca Honey & Rocket",
@@ -369,6 +388,11 @@ const T = {
       "La Alizé — Selección de Quesos Nacionales e Internacionales (Gorgonzola, Manchego, Queso de Oveja con Trufa, Roncal…) con frutas y crackers":"La Alizé — Spanish & International Cheese Selection (Gorgonzola, Manchego, Truffle Sheep Cheese, Roncal…) with fruit and crackers",
       "Pan Baguette Artesana":"Artisan Baguette",
       "Hogaza de pan de masa madre":"Sourdough Loaf",
+      "Hogaza de pan de masa madre integral":"Wholewheat Sourdough Loaf",
+      "Mantequilla artesana de Menorca 200gr":"Menorca Artisan Butter 200g",
+      "Nespresso Volluto (cápsula)":"Nespresso Volluto (capsule)",
+      "Nespresso Ristretto (cápsula)":"Nespresso Ristretto (capsule)",
+      "Nespresso Ristretto Decaffeinato (cápsula)":"Nespresso Ristretto Decaffeinato (capsule)",
       "Yoghourt Artesano Pastoret Griego Natural 500ml":"Pastoret Artisan Greek Natural Yoghurt 500ml",
       "Yoghourt Artesano fresa, frambuesa o maracuyá":"Artisan Yoghurt — Strawberry, Raspberry or Passion Fruit",
       "Yoghourt Artesano Pastoret Pistacho":"Pastoret Artisan Pistachio Yoghurt",
@@ -376,7 +400,7 @@ const T = {
       "Mermeladas de Miel i Untis":"Miel i Untis Jams",
       "Figat":"Fig Preserve",
       "Aceite AOVE Menorca Llucasaldent Gran Lata 100ml":"Llucasaldent Menorca Extra Virgin Olive Oil 100ml",
-      "Aceite AOVE Menorca Llucasaldent Botella Cristal 250ml":"Llucasaldent Menorca Extra Virgin Olive Oil Glass Bottle 250ml",
+      "Aceite AOVE Menorca Del Perico 500ml":"Del Perico Menorca Extra Virgin Olive Oil 500ml",
       "Sal de Menorca 1kg":"Menorca Sea Salt 1kg",
       "Flor de Sal de Menorca — Ahumada / Finas hierbas / Picante / Natural":"Menorca Fleur de Sel — Smoked / Fine Herbs / Spicy / Natural",
       "Especias NOMU (Moroccan / Indian / Tandoori)":"NOMU Spice Blends (Moroccan / Indian / Tandoori)",
@@ -407,6 +431,12 @@ const T = {
       "Pesto a la Genovesa":"Genoese Pesto",
       "Salsa de Tomate y Albahaca":"Tomato & Basil Sauce",
       "Salsa Spinaler":"Spinaler Sauce",
+      "Tomate Frito Mutti":"Mutti Fried Tomato Sauce",
+      "Salsa Tomate Especial Pizza Mutti":"Mutti Special Pizza Tomato Sauce",
+      "Tomate Triturado Passata Mutti":"Mutti Crushed Tomato Passata",
+      "Salsa Putanesca":"Puttanesca Sauce",
+      "Salsa de Setas con Trufa":"Wild Mushroom & Truffle Sauce",
+      "Hielo":"Ice",
       "Mejillones Fritos en Escabeche":"Fried Mussels in Escabeche",
       "Mejillones Salsa de Vieira":"Mussels in Scallop Sauce",
       "Mejillones en Escabeche con Algas":"Mussels in Escabeche with Seaweed",
@@ -433,6 +463,8 @@ const T = {
       "Parmigiano Reggiano 250g":"Parmigiano Reggiano 250g",
       "Gouda Viejo 250g":"Aged Gouda 250g",
       "Gorgonzola Dolce 250g":"Gorgonzola Dolce 250g",
+      "Burrata":"Burrata",
+      "Stracciatella":"Stracciatella",
       "Jamón Ibérico 100% Cebo Campo BEHER Etiqueta Roja (precio por 100g)":"BEHER 100% Ibérico Free-Range Ham Red Label (price per 100g)",
       "Jamón Ibérico 100% Bellota BEHER Etiqueta Oro (precio por 100g)":"BEHER 100% Acorn-fed Ibérico Ham Gold Label (price per 100g)",
       "Sobrasada Suave o Picante MENORCA 250g":"Menorca Sobrasada — Mild or Spicy 250g",
@@ -456,6 +488,9 @@ const T = {
       "Glop Rosa — Aromàtica":"Glop Rosa — Aromatic Gin",
       "Xoriguer Azafrán":"Xoriguer Saffron Gin",
       "Ginebra formato 10cl":"Gin 10cl format",
+      "Pomada de Gin Glop con Limonada 1L":"Gin Glop Pomada with Lemonade 1L",
+      "Ginger Ale":"Ginger Ale",
+      "Tónica Premium Fever-Tree":"Fever-Tree Premium Tonic",
       "Hierbas Menorca BINIARBOLLA — Secas":"BINIARBOLLA Menorca Herbs — Dry",
       "Hierbas Menorca BINIARBOLLA — Semis":"BINIARBOLLA Menorca Herbs — Semi",
       "Hierbas Menorca BINIARBOLLA — Dulces":"BINIARBOLLA Menorca Herbs — Sweet",
@@ -515,8 +550,16 @@ const T = {
       {value:"Urgente / Domingo", label:"⚡ Urgente o Domingo — precio a consultar"},
     ],
     urgentNotice: "Los pedidos urgentes y los domingos (solo por la mañana) llevan un suplemento. Consúltanos.",
+    lblDeliverySlot: "Franja horaria de entrega *",
+    deliverySlots: [
+      {value:"", label:"— Selecciona franja horaria —"},
+      {value:"09:00h en pantalán", label:"🌅 09:00h en pantalán — pedidos antes de las 20:00h"},
+      {value:"14:00h en pantalán", label:"☀️ 14:00h en pantalán — pedidos antes de las 11:00h"},
+      {value:"21:30h", label:"🌙 21:30h — sujeto a disponibilidad, consúltanos"},
+    ],
+    sundayNotice: "Los domingos solo hay entrega a las 14:00h.",
     lblMarina: "Marinería / Puerto *",
-    lblDelivery: "Fecha de entrega * (mínimo 24h de antelación)",
+    lblDelivery: "Fecha de entrega *",
     lblPax: "Número de pasajeros",
     lblNotes: "Observaciones / alergias / peticiones especiales",
     phBoat: "ej. Lady Blue",
@@ -543,11 +586,12 @@ const T = {
     waNotes: "📝 *Observaciones:*",
     waTagline: "_Descorcha Tus Sentidos 🌊_",
     paymentReminder: "Recuerde pasar por la recepción de Marina Port Mahón para realizar el pago.",
-    timingNotice: "Los pedidos deben realizarse con un mínimo de 24h de antelación. Servimos cada mañana. Para pedidos grandes, el stock está sujeto a confirmación previa.",
+    timingNotice: "Confirmamos contigo por teléfono o WhatsApp la franja horaria de entrega. Para pedidos grandes, el stock está sujeto a confirmación previa.",
     timingLabel: "Importante",
     emailSubject: "Pedido Provisioning — D'Origen",
     sendEmail: "Enviar pedido por Email",
     consultLabel: "consultar",
+    bestTag: "★ Más vendido",
     limitedStock: "⚠ Stock Limitado — Sujeto a disponibilidad",
     stockConfirm: "Para pedidos grandes, el stock está sujeto a confirmación.",
     jewNote: "Referencias premium seleccionadas por Sara Sanchís. Disponibilidad limitada — precio a consultar.",
@@ -575,8 +619,16 @@ const T = {
       {value:"Urgente / Domingo", label:"⚡ Urgent o Diumenge — preu a consultar"},
     ],
     urgentNotice: "Les comandes urgents i les de diumenge (només al matí) tenen un suplement. Consulta'ns.",
+    lblDeliverySlot: "Franja horària de lliurament *",
+    deliverySlots: [
+      {value:"", label:"— Selecciona franja horària —"},
+      {value:"09:00h en pantalán", label:"🌅 09:00h al pantalan — comandes abans de les 20:00h"},
+      {value:"14:00h en pantalán", label:"☀️ 14:00h al pantalan — comandes abans de les 11:00h"},
+      {value:"21:30h", label:"🌙 21:30h — subjecte a disponibilitat, consulta'ns"},
+    ],
+    sundayNotice: "Els diumenges només hi ha lliurament a les 14:00h.",
     lblMarina: "Marina / Port *",
-    lblDelivery: "Data de lliurament * (mínim 24h d'antelació)",
+    lblDelivery: "Data de lliurament *",
     lblPax: "Nombre de passatgers",
     lblNotes: "Observacions / al·lèrgies / peticions especials",
     phBoat: "ex. Lady Blue",
@@ -603,15 +655,18 @@ const T = {
     waNotes: "📝 *Observacions:*",
     waTagline: "_Descorxa els Teus Sentits 🌊_",
     paymentReminder: "Recordeu passar per la recepció de Marina Port Mahón per fer el pagament.",
-    timingNotice: "Les comandes s'han de fer amb un mínim de 24h d'antelació. Servim cada matí. Per a comandes grans, l'estoc està subjecte a confirmació prèvia.",
+    timingNotice: "Confirmem amb tu per telèfon o WhatsApp la franja horària de lliurament. Per a comandes grans, l'estoc està subjecte a confirmació prèvia.",
     timingLabel: "Important",
     emailSubject: "Comanda Provisioning — D'Origen",
     sendEmail: "Envia la comanda per Email",
     consultLabel: "a consultar",
+    bestTag: "★ Més venut",
     limitedStock: "⚠ Estoc Limitat — Subjecte a disponibilitat",
     stockConfirm: "Per a comandes grans, l'estoc està subjecte a confirmació.",
     jewNote: "Vins d'excepció seleccionats personalment per Sara Sanchís. Disponibilitat limitada — preu a consultar.",
     cats: {
+      "🥐 PACK ESMORZAR — Desayuno para 2":"🥐 PACK ESMORZAR — Esmorzar per a 2",
+      "🌅 SUNSET D'ORIGEN — Tabla Ibéricos + Vino + Gildas":"🌅 SUNSET D'ORIGEN — Taula Ibèrics + Vi + Gildas",
       "⚓ ESPECIAL SALIDAS EN BARCO":"⚓ ESPECIAL SORTIDES EN BARCA",
       "🧀 TABLAS GOURMET — Caja Kraft · 4-6 personas":"🧀 TAULES GOURMET — Caixa Kraft · 4-6 persones",
       "DESAYUNO Y PANADERÍA":"ESMORZAR I FLECA",
@@ -638,6 +693,8 @@ const T = {
       "✉ BAJO ENCARGO — CONSÚLTANOS":"✉ PER ENCÀRREC — CONSULTA'NS",
     },
     notes: {
+      "Desayuno completo listo para disfrutar a bordo o en casa":"Esmorzar complet a punt per gaudir a bord o a casa",
+      "El pack perfecto para el atardecer: listo para descorchar y disfrutar, sin encargo previo":"El pack perfecte per a l'horabaixa: a punt per descorcar i gaudir, sense comanda prèvia",
       "Focaccias artesanales elaboradas cada mañana con harinas ecológicas · Chef Sergio Loris":"Focaccias artesanals elaborades cada matí amb farines ecològiques · Xef Sergio Loris",
       "Presentadas en caja Kraft · Pensadas para 4-6 personas":"Presentades en caixa Kraft · Pensades per a 4-6 persones",
       "Helados artesanos elaborados con leche de Vaca Vermella Menorquina · Tarrina 135ml":"Gelats artesans elaborats amb llet de Vaca Vermella Menorquina · Terrina 135ml",
@@ -645,6 +702,8 @@ const T = {
       "¿No encuentras lo que buscas? Contáctanos — podemos conseguir casi cualquier producto gourmet.":"No trobes el que busques? Contacta'ns — podem aconseguir gairebé qualsevol producte gourmet.",
     },
     products: {
+      "Pack Esmorzar — 2 Pain au Chocolat, Pan de Masa Madre, Mermelada de Menorca y Mantequilla Artesana":"Pack Esmorzar — 2 Pain au Chocolat, Pa de Massa Mare, Melmelada de Menorca i Mantega Artesana",
+      "Sunset D'Origen — Tabla de Ibéricos, Botella Alba Rosé y 8 Gildas":"Sunset D'Origen — Taula d'Ibèrics, Ampolla Alba Rosé i 8 Gildas",
       "Focaccia La Italiana — Mortadela, Scamorza Ahumada, Rúcula y Pesto":"Focaccia La Italiana — Mortadel·la, Scamorza Fumada, Ruca i Pesto",
       "Focaccia La Pastrami Deluxe — Pastrami, Cheddar, Salsa Tártara y Espinacas":"Focaccia La Pastrami Deluxe — Pastrami, Cheddar, Salsa Tàrtara i Espinacs",
       "Focaccia La Menorquina — Sobrasada, Miel de Menorca y Rúcula":"Focaccia La Menorquina — Sobrassada, Mel de Menorca i Ruca",
@@ -655,6 +714,11 @@ const T = {
       "La Alizé — Selección de Quesos Nacionales e Internacionales (Gorgonzola, Manchego, Queso de Oveja con Trufa, Roncal…) con frutas y crackers":"La Alizé — Selecció de Formatges Nacionals i Internacionals (Gorgonzola, Manxego, Formatge d'Ovella amb Tòfona, Roncal…) amb fruita i crackers",
       "Pan Baguette Artesana":"Baguet Artesana",
       "Hogaza de pan de masa madre":"Fogassa de pa de massa mare",
+      "Hogaza de pan de masa madre integral":"Fogassa de pa de massa mare integral",
+      "Mantequilla artesana de Menorca 200gr":"Mantega artesana de Menorca 200gr",
+      "Nespresso Volluto (cápsula)":"Nespresso Volluto (càpsula)",
+      "Nespresso Ristretto (cápsula)":"Nespresso Ristretto (càpsula)",
+      "Nespresso Ristretto Decaffeinato (cápsula)":"Nespresso Ristretto Decaffeinato (càpsula)",
       "Yoghourt Artesano Pastoret Griego Natural 500ml":"Iogurt Artesà Pastoret Grec Natural 500ml",
       "Yoghourt Artesano fresa, frambuesa o maracuyá":"Iogurt Artesà — maduixa, gerd o fruita de la passió",
       "Yoghourt Artesano Pastoret Pistacho":"Iogurt Artesà Pastoret Festuc",
@@ -662,7 +726,7 @@ const T = {
       "Mermeladas de Miel i Untis":"Melmelades de Miel i Untis",
       "Figat":"Figat",
       "Aceite AOVE Menorca Llucasaldent Gran Lata 100ml":"Oli d'Oliva Verge Extra Menorca Llucasaldent Llauna 100ml",
-      "Aceite AOVE Menorca Llucasaldent Botella Cristal 250ml":"Oli d'Oliva Verge Extra Menorca Llucasaldent Ampolla de Vidre 250ml",
+      "Aceite AOVE Menorca Del Perico 500ml":"Oli d'Oliva Verge Extra Menorca Del Perico 500ml",
       "Sal de Menorca 1kg":"Sal de Menorca 1kg",
       "Flor de Sal de Menorca — Ahumada / Finas hierbas / Picante / Natural":"Flor de Sal de Menorca — Fumada / Fines Herbes / Picant / Natural",
       "Especias NOMU (Moroccan / Indian / Tandoori)":"Espècies NOMU (Moroccan / Indian / Tandoori)",
@@ -693,6 +757,12 @@ const T = {
       "Pesto a la Genovesa":"Pesto Genovès",
       "Salsa de Tomate y Albahaca":"Salsa de Tomàtiga i Alfàbrega",
       "Salsa Spinaler":"Salsa Spinaler",
+      "Tomate Frito Mutti":"Tomàquet Fregit Mutti",
+      "Salsa Tomate Especial Pizza Mutti":"Salsa de Tomàquet Especial Pizza Mutti",
+      "Tomate Triturado Passata Mutti":"Tomàquet Triturat Passata Mutti",
+      "Salsa Putanesca":"Salsa Putanesca",
+      "Salsa de Setas con Trufa":"Salsa de Bolets amb Tòfona",
+      "Hielo":"Gel",
       "Mejillones Fritos en Escabeche":"Musclos Fregits en Escabetx",
       "Mejillones Salsa de Vieira":"Musclos en Salsa de Vieira",
       "Mejillones en Escabeche con Algas":"Musclos en Escabetx amb Algues",
@@ -720,6 +790,8 @@ const T = {
       "Gouda Viejo 250g":"Gouda Vell 250g",
       "Gorgonzola Dolce 250g":"Gorgonzola Dolce 250g",
       "Jamón Ibérico 100% Cebo Campo BEHER Etiqueta Roja (precio por 100g)":"Pernil Ibèric 100% Cebo de Campo BEHER Etiqueta Vermella (preu per 100g)",
+      "Burrata":"Burrata",
+      "Stracciatella":"Stracciatella",
       "Jamón Ibérico 100% Bellota BEHER Etiqueta Oro (precio por 100g)":"Pernil Ibèric 100% Bellota BEHER Etiqueta Or (preu per 100g)",
       "Sobrasada Suave o Picante MENORCA 250g":"Sobrassada Suau o Picant MENORCA 250g",
       "Carnixua Artesana de MENORCA 250g":"Carnixua Artesana de MENORCA 250g",
@@ -742,6 +814,9 @@ const T = {
       "Glop Rosa — Aromàtica":"Glop Rosa — Aromàtica",
       "Xoriguer Azafrán":"Xoriguer Safrà",
       "Ginebra formato 10cl":"Ginebra format 10cl",
+      "Pomada de Gin Glop con Limonada 1L":"Pomada de Gin Glop amb Llimonada 1L",
+      "Ginger Ale":"Ginger Ale",
+      "Tónica Premium Fever-Tree":"Tònica Premium Fever-Tree",
       "Hierbas Menorca BINIARBOLLA — Secas":"Herbes de Menorca BINIARBOLLA — Seques",
       "Hierbas Menorca BINIARBOLLA — Semis":"Herbes de Menorca BINIARBOLLA — Semi",
       "Hierbas Menorca BINIARBOLLA — Dulces":"Herbes de Menorca BINIARBOLLA — Dolces",
@@ -799,8 +874,16 @@ const T_FR = {
       {value:"Urgente / Domingo", label:"⚡ Urgent ou Dimanche — prix sur demande"},
     ],
     urgentNotice: "Les commandes urgentes et du dimanche (matin uniquement) sont soumises à un supplément. Contactez-nous.",
+    lblDeliverySlot: "Créneau horaire de livraison *",
+    deliverySlots: [
+      {value:"", label:"— Sélectionnez un créneau horaire —"},
+      {value:"09:00h en pantalán", label:"🌅 9h00 au ponton — commandes avant 20h00"},
+      {value:"14:00h en pantalán", label:"☀️ 14h00 au ponton — commandes avant 11h00"},
+      {value:"21:30h", label:"🌙 21h30 — selon disponibilité, merci de nous contacter"},
+    ],
+    sundayNotice: "Le dimanche, la livraison n'est possible qu'à 14h00.",
     lblMarina: "Marina / Port *",
-    lblDelivery: "Date de livraison * (minimum 24h à l'avance)",
+    lblDelivery: "Date de livraison *",
     lblPax: "Nombre de passagers",
     lblNotes: "Observations / allergies / demandes spéciales",
     phBoat: "ex. Lady Blue",
@@ -817,7 +900,7 @@ const T_FR = {
     alertDeliveryMethod: "Veuillez sélectionner le mode de livraison.",
     alertMarina: "Veuillez sélectionner une marina.",
     alertDelivery: "Veuillez indiquer la date et l'heure de livraison.",
-    timingNotice: "Les commandes doivent être passées au moins 24 heures à l'avance. Nous livrons chaque matin. Pour les grandes commandes, la disponibilité des stocks est soumise à confirmation préalable.",
+    timingNotice: "Nous confirmons avec vous par téléphone ou WhatsApp le créneau horaire de livraison. Pour les grandes commandes, la disponibilité du stock est soumise à confirmation préalable.",
     timingLabel: "Important",
     emailSubject: "Commande Provisioning — D'Origen",
     waHeader: "🛥️ *COMMANDE D'ORIGEN PROVISIONING*",
@@ -832,10 +915,13 @@ const T_FR = {
     waTagline: "_Débouchez vos sens 🌊_",
     paymentReminder: "N'oubliez pas de passer à la réception de Marina Port Mahón pour effectuer le paiement.",
     consultLabel: "sur demande",
+    bestTag: "★ Meilleure vente",
     limitedStock: "⚠ Stock Limité — Sous réserve de disponibilité",
     jewNote: "Vins d'exception sélectionnés personnellement par Sara Sanchís. Disponibilité limitée — prix sur demande.",
     drawerTitle: "Ma Commande",
     cats: {
+      "🥐 PACK ESMORZAR — Desayuno para 2":"🥐 PACK PETIT-DÉJEUNER — Pour 2 personnes",
+      "🌅 SUNSET D'ORIGEN — Tabla Ibéricos + Vino + Gildas":"🌅 SUNSET D'ORIGEN — Plateau Ibérico + Vin + Gildas",
       "⚓ ESPECIAL SALIDAS EN BARCO":"⚓ SPÉCIAL SORTIE EN MER",
       "🧀 TABLAS GOURMET — Caja Kraft · 4-6 personas":"🧀 PLATEAUX GOURMET — Boîte Kraft · 4-6 personnes",
       "DESAYUNO Y PANADERÍA":"PETIT-DÉJEUNER & BOULANGERIE",
@@ -862,6 +948,8 @@ const T_FR = {
       "✉ BAJO ENCARGO — CONSÚLTANOS":"✉ SUR COMMANDE — CONTACTEZ-NOUS",
     },
     notes: {
+      "Desayuno completo listo para disfrutar a bordo o en casa":"Petit-déjeuner complet prêt à déguster à bord ou à la maison",
+      "El pack perfecto para el atardecer: listo para descorchar y disfrutar, sin encargo previo":"Le pack idéal pour le coucher de soleil : prêt à déboucher et à déguster, sans commande préalable",
       "Focaccias artesanales elaboradas cada mañana con harinas ecológicas · Chef Sergio Loris":"Focaccias artisanales préparées chaque matin avec des farines biologiques · Chef Sergio Loris",
       "Presentadas en caja Kraft · Pensadas para 4-6 personas":"Présentés en boîte Kraft · Idéal pour 4-6 personnes",
       "Helados artesanos elaborados con leche de Vaca Vermella Menorquina · Tarrina 135ml":"Glaces artisanales au lait de Vache Vermella de Minorque · Pot 135ml",
@@ -869,6 +957,8 @@ const T_FR = {
       "¿No encuentras lo que buscas? Contáctanos — podemos conseguir casi cualquier producto gourmet.":"Vous ne trouvez pas ce que vous cherchez ? Contactez-nous — nous pouvons sourcer presque n'importe quel produit gourmet.",
     },
     products: {
+      "Pack Esmorzar — 2 Pain au Chocolat, Pan de Masa Madre, Mermelada de Menorca y Mantequilla Artesana":"Pack Petit-Déjeuner — 2 Pain au Chocolat, Pain au Levain, Confiture de Minorque et Beurre Artisanal",
+      "Sunset D'Origen — Tabla de Ibéricos, Botella Alba Rosé y 8 Gildas":"Sunset D'Origen — Plateau Ibérico, Bouteille Alba Rosé et 8 Gildas",
       "Focaccia La Italiana — Mortadela, Scamorza Ahumada, Rúcula y Pesto":"Focaccia La Italiana — Mortadelle, Scamorza Fumée, Roquette & Pesto",
       "Focaccia La Pastrami Deluxe — Pastrami, Cheddar, Salsa Tártara y Espinacas":"Focaccia La Pastrami Deluxe — Pastrami, Cheddar, Sauce Tartare & Épinards",
       "Focaccia La Menorquina — Sobrasada, Miel de Menorca y Rúcula":"Focaccia La Menorquina — Sobrasada, Miel de Minorque & Roquette",
@@ -879,6 +969,11 @@ const T_FR = {
       "La Alizé — Selección de Quesos Nacionales e Internacionales (Gorgonzola, Manchego, Queso de Oveja con Trufa, Roncal…) con frutas y crackers":"La Alizé — Sélection de Fromages Espagnols et Internationaux (Gorgonzola, Manchego, Fromage de Brebis à la Truffe, Roncal…) avec fruits et crackers",
       "Pan Baguette Artesana":"Baguette Artisanale",
       "Hogaza de pan de masa madre":"Pain au Levain",
+      "Hogaza de pan de masa madre integral":"Pain au Levain Complet",
+      "Mantequilla artesana de Menorca 200gr":"Beurre Artisanal de Minorque 200g",
+      "Nespresso Volluto (cápsula)":"Nespresso Volluto (capsule)",
+      "Nespresso Ristretto (cápsula)":"Nespresso Ristretto (capsule)",
+      "Nespresso Ristretto Decaffeinato (cápsula)":"Nespresso Ristretto Decaffeinato (capsule)",
       "Croissant":"Croissant",
       "Pain au Chocolat":"Pain au Chocolat",
       "Carquiñolis de Sa Sucrería":"Carquiñolis de Sa Sucrería",
@@ -890,7 +985,7 @@ const T_FR = {
       "Mermeladas de Miel i Untis":"Confitures Miel i Untis",
       "Figat":"Confiture de Figues",
       "Aceite AOVE Menorca Llucasaldent Gran Lata 100ml":"Huile d'Olive Extra Vierge Llucasaldent Minorque 100ml",
-      "Aceite AOVE Menorca Llucasaldent Botella Cristal 250ml":"Huile d'Olive Extra Vierge Llucasaldent Minorque Bouteille en Verre 250ml",
+      "Aceite AOVE Menorca Del Perico 500ml":"Huile d'Olive Extra Vierge Del Perico Minorque 500ml",
       "Sal de Menorca 1kg":"Sel de Minorque 1kg",
       "Flor de Sal de Menorca — Ahumada / Finas hierbas / Picante / Natural":"Fleur de Sel de Minorque — Fumée / Fines Herbes / Piquante / Nature",
       "Especias NOMU (Moroccan / Indian / Tandoori)":"Épices NOMU (Marocain / Indien / Tandoori)",
@@ -903,6 +998,12 @@ const T_FR = {
       "Pesto a la Genovesa":"Pesto à la Génoise",
       "Salsa de Tomate y Albahaca":"Sauce Tomate & Basilic",
       "Salsa Spinaler":"Sauce Spinaler",
+      "Tomate Frito Mutti":"Sauce Tomate Frite Mutti",
+      "Salsa Tomate Especial Pizza Mutti":"Sauce Tomate Spéciale Pizza Mutti",
+      "Tomate Triturado Passata Mutti":"Passata de Tomate Mutti",
+      "Salsa Putanesca":"Sauce Puttanesca",
+      "Salsa de Setas con Trufa":"Sauce aux Champignons et Truffe",
+      "Hielo":"Glaçons",
       "Hummus de Garbanzo":"Houmous de Pois Chiches",
       "Hummus de Berenjenas Asadas":"Houmous d'Aubergines Rôties",
       "Crema de Boletus a la Trufa":"Crème de Boletus à la Truffe",
@@ -948,6 +1049,8 @@ const T_FR = {
       "Gouda Viejo 250g":"Gouda Vieux 250g",
       "Gorgonzola Dolce 250g":"Gorgonzola Dolce 250g",
       "Jamón Ibérico 100% Cebo Campo BEHER Etiqueta Roja (precio por 100g)":"Jambon Ibérique 100% BEHER Étiquette Rouge (prix par 100g)",
+      "Burrata":"Burrata",
+      "Stracciatella":"Stracciatella",
       "Jamón Ibérico 100% Bellota BEHER Etiqueta Oro (precio por 100g)":"Jambon Ibérique 100% Bellota BEHER Étiquette Or (prix par 100g)",
       "Sobrasada Suave o Picante MENORCA 250g":"Sobrasada Douce ou Piquante MINORQUE 250g",
       "Carnixua Artesana de MENORCA 250g":"Carnixua Artisanale de MINORQUE 250g",
@@ -1003,9 +1106,12 @@ const T_FR = {
       "Glop Rosa — Aromàtica":"Glop Rosa — Gin Aromatique",
       "Xoriguer Azafrán":"Xoriguer Gin au Safran",
       "Ginebra de Menorca — formato 10cl":"Gin de Minorque — format 10cl",
+      "Pomada de Gin Glop con Limonada 1L":"Pomada Gin Glop à la Limonade 1L",
+      "Ginger Ale":"Ginger Ale",
+      "Tónica Premium Fever-Tree":"Tonic Premium Fever-Tree",
       "Lager":"Lager",
       "IPA":"IPA",
-      "Pealsner":"Pealsner",
+      "Pilsner":"Pilsner",
       "Brown Ale":"Brown Ale",
       "Hierbas Menorca BINIARBOLLA — Secas":"Herbes de Minorque BINIARBOLLA — Sèches",
       "Hierbas Menorca BINIARBOLLA — Semis":"Herbes de Minorque BINIARBOLLA — Demi-Douces",
@@ -1046,9 +1152,23 @@ const T_FR = {
 };
 
 const NAV_KEYS = ["navAll","navBoat","navBreakfast","navSnacks","navCheese","navWines","navDrinks","navEncargo"];
-const NAV_IDS  = [null, ["00","00b"], ["01","03","04"], ["05","06","08"], ["09","10","11","12"], ["13","14","15b","15","16","17","18"], ["19","20","21","21b"], ["22"]];
+const NAV_IDS  = [null, ["00","00b","p2"], ["01","03","04","p1"], ["05","06","08"], ["09","10","11","12"], ["13","14","15b","15","16","17","18"], ["19","20","21","21b"], ["22"]];
 
 const CATALOG = [
+  {
+    id:"p1", section:"Pack Esmorzar", category:"🥐 PACK ESMORZAR — Desayuno para 2",
+    note:"Desayuno completo listo para disfrutar a bordo o en casa",
+    items:[
+      {name:"Pack Esmorzar — 2 Pain au Chocolat, Pan de Masa Madre, Mermelada de Menorca y Mantequilla Artesana", price:20.00},
+    ],
+  },
+  {
+    id:"p2", section:"Sunset", category:"🌅 SUNSET D'ORIGEN — Tabla Ibéricos + Vino + Gildas",
+    note:"El pack perfecto para el atardecer: listo para descorchar y disfrutar, sin encargo previo",
+    items:[
+      {name:"Sunset D'Origen — Tabla de Ibéricos, Botella Alba Rosé y 8 Gildas", price:60.00},
+    ],
+  },
   {
     id:"00", section:"Especial Barco", category:"⚓ ESPECIAL SALIDAS EN BARCO",
     note:"Focaccias artesanales elaboradas cada mañana con harinas ecológicas · Chef Sergio Loris",
@@ -1056,7 +1176,7 @@ const CATALOG = [
     img2:"barco-2.webp",
     items:[
       {name:"Focaccia La Italiana — Mortadela, Scamorza Ahumada, Rúcula y Pesto", price:8.90},
-      {name:"Focaccia La Pastrami Deluxe — Pastrami, Cheddar, Salsa Tártara y Espinacas", price:8.90},
+      {name:"Focaccia La Pastrami Deluxe — Pastrami, Cheddar, Salsa Tártara y Espinacas", price:8.90, best:true},
       {name:"Focaccia La Menorquina — Sobrasada, Miel de Menorca y Rúcula", price:8.90},
       {name:"Focaccia La Ibérica — Jamón BEHER 100% Ibérico, Crema de Tomates Secos y Rúcula", price:10.90},
     ],
@@ -1068,30 +1188,27 @@ const CATALOG = [
     items:[
       {name:"La Tramontana — Sobrasada, Queso Mahón Semi y Curado, Carnixua y Camot, con crackers y frutas", price:36.00},
       {name:"La Cierzo — Jamón DOP Teruel, Salchichón, Chorizo y Lomo Embuchado, con crackers artesanos y frutas", price:29.00},
-      {name:"La Poniente — Jamón Ibérico 100% BEHER, Salchichón Ibérico, Chorizo Ibérico y Coppa Ibérica de Bellota, con frutas y crackers", price:45.00},
-      {name:"La Alizé — Selección de Quesos Nacionales e Internacionales (Gorgonzola, Manchego, Queso de Oveja con Trufa, Roncal…) con frutas y crackers", price:45.00},
+      {name:"La Poniente — Jamón Ibérico 100% BEHER, Salchichón Ibérico, Chorizo Ibérico y Coppa Ibérica de Bellota, con frutas y crackers", price:45.00, best:true},
+      {name:"La Alizé — Selección de Quesos Nacionales e Internacionales (Gorgonzola, Manchego, Queso de Oveja con Trufa, Roncal…) con frutas y crackers", price:45.00, best:true},
     ],
   },
   {id:"01",section:"Desayuno & Pan",category:"DESAYUNO Y PANADERÍA",items:[
     {name:"Pan Baguette Artesana",price:1.50},
     {name:"Hogaza de pan de masa madre",price:4.60},
-    {name:"Croissant",price:1.90},
+    {name:"Hogaza de pan de masa madre integral",price:4.60},
     {name:"Pain au Chocolat",price:1.90},
     {name:"Carquiñolis de Sa Sucrería",price:3.70},
     {name:"Menorca BARKIBON de chocolate",price:3.50},
+    {name:"Mantequilla artesana de Menorca 200gr",price:3.50},
+    {name:"Nespresso Volluto (cápsula)",price:6.90},
+    {name:"Nespresso Ristretto (cápsula)",price:5.60},
+    {name:"Nespresso Ristretto Decaffeinato (cápsula)",price:6.20},
     {name:"Yoghourt Artesano Pastoret Griego Natural 500ml",price:3.70},
     {name:"Yoghourt Artesano fresa, frambuesa o maracuyá",price:1.10},
       {name:"Yoghourt Artesano Pastoret Pistacho",price:2.90},
     {name:"Miel de Sta Margarida",price:9.00},
     {name:"Mermeladas de Miel i Untis",price:4.90},
     {name:"Figat",price:7.85},
-  ]},
-  {id:"03",section:"Condimentos",category:"CONDIMENTOS",items:[
-    {name:"Aceite AOVE Menorca Llucasaldent Gran Lata 100ml",price:5.60},
-      {name:"Aceite AOVE Menorca Llucasaldent Botella Cristal 250ml",price:9.90},
-    {name:"Sal de Menorca 1kg",price:10.00},
-    {name:"Flor de Sal de Menorca — Ahumada / Finas hierbas / Picante / Natural",price:15.00},
-    {name:"Especias NOMU (Moroccan / Indian / Tandoori)",price:6.75},
   ]},
   {id:"04",section:"Básicos",category:"BÁSICOS — PASTA, ARROZ & SALSAS",items:[
     {name:"Pasta Rummo Penne Rigate",price:2.90},
@@ -1103,6 +1220,12 @@ const CATALOG = [
     {name:"Pesto a la Genovesa",price:7.95},
     {name:"Salsa de Tomate y Albahaca",price:5.50},
     {name:"Salsa Spinaler",price:3.50},
+    {name:"Tomate Frito Mutti",price:2.95},
+    {name:"Salsa Tomate Especial Pizza Mutti",price:2.70},
+    {name:"Tomate Triturado Passata Mutti",price:2.70},
+    {name:"Salsa Putanesca",price:2.80},
+    {name:"Salsa de Setas con Trufa",price:2.80},
+    {name:"Hielo",price:3.00},
   ]},
   {id:"05",section:"Picoteo",category:"PICOTEO",items:[
     {name:"Hummus de Garbanzo",price:2.75},
@@ -1111,11 +1234,11 @@ const CATALOG = [
     {name:"Crema de Piquillos",price:4.25},
     {name:"Paté de Ciervo",price:2.80},
     {name:"Paté de Perdiz",price:2.80},
-    {name:"Gildas XXL con Carnixua y Queso de Mahón (6 uds)",price:12.00},
-    {name:"Gildas Clásicas Anchoa o Boquerón (6 uds)",price:6.00},
-    {name:"Anchoas de l'Escala — bote de cristal",price:7.95},
-    {name:"Anchoas del Cantábrico 6 uds",price:7.50},
-    {name:"Boquerones en Vinagre 6 uds",price:5.70},
+    {name:"Gildas XXL con Carnixua y Queso de Mahón (6 uds)",price:12.00,best:true},
+    {name:"Gildas Clásicas Anchoa o Boquerón (6 uds)",price:6.00,best:true},
+    {name:"Anchoas de l'Escala — bote de cristal",price:7.95,best:true},
+    {name:"Anchoas del Cantábrico 6 uds",price:7.50,best:true},
+    {name:"Boquerones en Vinagre 6 uds",price:5.70,best:true},
     {name:"Patatas Chips Artesanas Argente",price:2.60},
     {name:"Crackers Obando Hojas de Pan",price:3.50},
     {name:"Picos Artesanos Obando",price:2.90},
@@ -1168,6 +1291,8 @@ const CATALOG = [
     {name:"Parmigiano Reggiano 250g",price:7.25},
     {name:"Gouda Viejo 250g",price:5.80},
     {name:"Gorgonzola Dolce 250g",price:5.15},
+    {name:"Burrata",price:3.80},
+    {name:"Stracciatella",price:4.80},
   ]},
   {id:"12",section:"Charcuterie",category:"CHARCUTERIE — 250GR",items:[
     {name:"Jamón Ibérico 100% Cebo Campo BEHER Etiqueta Roja (precio por 100g)",price:8.80},
@@ -1250,13 +1375,15 @@ const CATALOG = [
     {name:"INNAT Premium",price:34.95},
     {name:"Glop Negra — Cítrica",price:24.95},
     {name:"Glop Rosa — Aromàtica",price:24.95},
-    {name:"Xoriguer Azafrán",price:35.00},
     {name:"Ginebra de Menorca — formato 10cl",price:9.65},
+    {name:"Pomada de Gin Glop con Limonada 1L",price:13.90},
+    {name:"Ginger Ale",price:2.50},
+    {name:"Tónica Premium Fever-Tree",price:2.50},
   ]},
   {id:"20",section:"Cerveza Menorca",category:"CERVEZA DE MENORCA — GRAHAM PEARCE",items:[
     {name:"Lager",price:2.60},
     {name:"IPA",price:3.35},
-    {name:"Pealsner",price:2.85},
+    {name:"Pilsner",price:2.85},
     {name:"Brown Ale",price:2.60},
   ]},
   {id:"21b",section:"Helados",category:"GELAT ARTESÀ SANTA CECÍLIA — MENORCA",
@@ -1291,6 +1418,13 @@ const CATALOG = [
     {name:"Vermouth La Cuesta Blanco",price:11.20},
     {name:"Vermouth Consia",price:59.60},
   ]},
+  {id:"03",section:"Condimentos",category:"CONDIMENTOS",items:[
+    {name:"Aceite AOVE Menorca Llucasaldent Gran Lata 100ml",price:5.60},
+      {name:"Aceite AOVE Menorca Del Perico 500ml",price:29.90},
+    {name:"Sal de Menorca 1kg",price:10.00},
+    {name:"Flor de Sal de Menorca — Ahumada / Finas hierbas / Picante / Natural",price:15.00},
+    {name:"Especias NOMU (Moroccan / Indian / Tandoori)",price:6.75},
+  ]},
 ];
 
 let cart = {};
@@ -1323,11 +1457,33 @@ function formatDelivery(val) {
 
 function setMinDelivery() {
   const now = new Date();
-  now.setDate(now.getDate() + 1);
   const pad = n => String(n).padStart(2,'0');
   const min = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
   const el = document.getElementById("delivery");
   if (el) { el.min = min; el.value = ""; }
+}
+
+function onDeliveryDateChange() {
+  const dateEl = document.getElementById("delivery");
+  const dsSelect = document.getElementById("deliverySlot");
+  const sundayNoticeEl = document.getElementById("sundayNotice");
+  if (!dateEl || !dsSelect) return;
+  let isSunday = false;
+  if (dateEl.value) {
+    const parts = dateEl.value.split("-").map(Number);
+    const d = new Date(parts[0], parts[1]-1, parts[2]);
+    isSunday = d.getDay() === 0;
+  }
+  Array.from(dsSelect.options).forEach(opt => {
+    if (opt.value === "") { opt.disabled = false; return; }
+    opt.disabled = isSunday && opt.value !== "14:00h en pantalán";
+  });
+  if (isSunday) {
+    dsSelect.value = "14:00h en pantalán";
+    if (sundayNoticeEl) sundayNoticeEl.style.display = "block";
+  } else {
+    if (sundayNoticeEl) sundayNoticeEl.style.display = "none";
+  }
 }
 
 function applyTexts() {
@@ -1366,6 +1522,11 @@ function applyTexts() {
   };
   document.getElementById("timingBannerText").textContent = t.timingNotice;
   document.getElementById("timingNotice").textContent = t.timingNotice;
+  document.getElementById("lblDeliverySlot").textContent = t.lblDeliverySlot;
+  const dsSelect = document.getElementById("deliverySlot");
+  dsSelect.innerHTML = t.deliverySlots.map(m => `<option value="${m.value}">${m.label}</option>`).join("");
+  document.getElementById("sundayNotice").textContent = t.sundayNotice;
+  onDeliveryDateChange();
   document.getElementById("fabText").textContent = t.myOrder;
   document.getElementById("drawerTitle").textContent = t.myOrder;
   renderDrawer();
@@ -1436,7 +1597,8 @@ function renderSections() {
              <button class="qbtn" data-key="${safeKey}" data-qty="${qty+1}" onclick="setQtyByKey(this)">+</button>
            </div>`;
       const displayName = (tLang && tLang.products && tLang.products[item.name]) ? tLang.products[item.name] : item.name;
-      html += `<div class="irow"><span class="iname">${displayName}</span><span class="iprice">${priceStr}</span>${ctrl}</div>`;
+      const bestTagHtml = item.best ? `<span style="display:inline-block;background:#C9A96E;color:#1C2820;font-family:'Raleway',sans-serif;font-size:9px;letter-spacing:.06em;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:8px;vertical-align:middle;">${t.bestTag}</span>` : "";
+      html += `<div class="irow"><span class="iname">${displayName}${bestTagHtml}</span><span class="iprice">${priceStr}</span>${ctrl}</div>`;
     });
 
     div.innerHTML = html;
@@ -1589,6 +1751,7 @@ function sendEmail() {
   const marinaEmail = marinaSelect.options[marinaSelect.selectedIndex]?.dataset?.email || "";
   const marinaEmail2 = marinaSelect.options[marinaSelect.selectedIndex]?.dataset?.email2 || "";
   const delivery = document.getElementById("delivery").value.trim();
+  const deliverySlot = document.getElementById("deliverySlot").value.trim();
   const pax = document.getElementById("pax").value.trim();
   const notes = document.getElementById("notes").value.trim();
 
@@ -1596,6 +1759,7 @@ function sendEmail() {
   if (!boat) { alert(t.alertBoat); return; }
   if (!marina || marina === "") { alert(t.alertMarina); return; }
   if (!delivery) { alert(t.alertDelivery); return; }
+  if (!deliverySlot) { alert(t.alertDelivery); return; }
 
   const entries = Object.entries(cart).filter(([,q])=>q>0);
   const itemsText = entries.map(([key,qty])=>{
@@ -1614,7 +1778,8 @@ function sendEmail() {
     marina_email2: marinaEmail2,
     boat_name: boat,
     delivery_method: deliveryMethod,
-    delivery: delivery,
+    delivery: delivery + (deliverySlot ? " — " + deliverySlot : ""),
+    delivery_slot: deliverySlot,
     pax: pax || "—",
     order_items: itemsText,
     total: fmt(cartTotal()),
@@ -1635,6 +1800,7 @@ function sendEmail() {
     document.getElementById("boatName").value = "";
     document.getElementById("marina").value = "";
     document.getElementById("delivery").value = "";
+    document.getElementById("deliverySlot").value = "";
     document.getElementById("pax").value = "";
     document.getElementById("notes").value = "";
     showCatalog();
@@ -1659,6 +1825,7 @@ function sendWhatsApp() {
   const marinaEmail = marinaSelect.options[marinaSelect.selectedIndex]?.dataset?.email || "";
   const marinaEmail2 = marinaSelect.options[marinaSelect.selectedIndex]?.dataset?.email2 || "";
   const delivery = document.getElementById("delivery").value.trim();
+  const deliverySlot = document.getElementById("deliverySlot").value.trim();
   const pax = document.getElementById("pax").value.trim();
   const notes = document.getElementById("notes").value.trim();
 
@@ -1667,16 +1834,8 @@ function sendWhatsApp() {
   if (!boat) { alert(t.alertBoat); return; }
   if (!marina || marina === "") { alert(t.alertMarina); return; }
   if (!delivery) { alert(t.alertDelivery); return; }
-
-  const deliveryDate = new Date(delivery);
-  const now = new Date();
-  const diffHours = (deliveryDate - now) / (1000 * 60 * 60);
-  if (!isNaN(diffHours) && diffHours < 24) {
-    alert(lang === 'en'
-      ? "Please allow at least 24 hours for order preparation."
-      : "Por favor, indica una entrega con al menos 24h de antelación.");
-    return;
-  }
+  if (!deliverySlot) { alert(t.alertDelivery); return; }
+  // Sin restricción bloqueante de 24h — franjas horarias gestionadas internamente por D'Origen
 
   const entries = Object.entries(cart).filter(([,q])=>q>0);
   const lines = entries.map(([key,qty])=>{
@@ -1688,7 +1847,7 @@ function sendWhatsApp() {
     t.waHeader,"",
     `${t.waDeliveryMethod} ${deliveryMethod}`,
     `${t.waBoat} ${boat}`,    `${t.waMarina} ${marina}`,
-    `${t.waDelivery} ${formatDelivery(delivery)}`,
+    `${t.waDelivery} ${formatDelivery(delivery)}${deliverySlot ? " — " + deliverySlot : ""}`,
     pax?`${t.waPax} ${pax}`:null,"",
     t.waProducts, lines,"",
     `${t.waTotal} ${fmt(cartTotal())}`,
@@ -1728,6 +1887,7 @@ function sendWhatsApp() {
       document.getElementById("boatName").value = "";
       document.getElementById("marina").value = "";
       document.getElementById("delivery").value = "";
+      document.getElementById("deliverySlot").value = "";
       document.getElementById("pax").value = "";
       document.getElementById("notes").value = "";
       cart = {};
